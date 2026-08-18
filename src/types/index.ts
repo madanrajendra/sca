@@ -87,6 +87,10 @@ export interface Business {
   offerDetails?: string;
   paymentMethod?: string;
   lastPaymentDate?: string;
+  rejectionReason?: string;
+  profileCompletionPercentage?: number;
+  firstName?: string;
+  lastName?: string;
 }
 
 export type PromotionStatus = 'DRAFT' | 'PENDING' | 'LIVE' | 'REJECTED' | 'EXPIRED' | 'PAUSED';

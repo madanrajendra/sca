@@ -63,6 +63,7 @@ interface SCADataContextType {
   // Business Loop 2: AdShare Marketplace
   createPromotion: (promo: Omit<AdSharePromotion, 'id' | 'views' | 'clicks' | 'shares' | 'resultsCount' | 'membersPromotingCount' | 'createdAt'>) => string;
   updatePromotionStatus: (id: string, status: PromotionStatus) => void;
+  togglePausePromotion: (id: string) => void;
   promoteOffer: (promotionId: string, promoterBusinessId: string, promoterBusinessName: string, promoterUserId: string) => PromotedOffer;
   simulateAdClick: (trackingCode: string) => void;
   
@@ -75,6 +76,12 @@ interface SCADataContextType {
     notes: string;
     hasConsent: boolean;
     estimatedValue?: number;
+    senderBusinessId?: string;
+    senderBusinessName?: string;
+    senderUserId?: string;
+    senderUserName?: string;
+    receiverBusinessName?: string;
+    allianceId?: string;
   }) => string;
   updateReferralStatus: (referralId: string, status: ReferralStatus, recordedValue?: number) => void;
   
@@ -317,6 +324,18 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
     logActivity('Promotion Status Updated', 'AdSharePromotion', id, `Status set to ${status}`);
   };
 
+  const togglePausePromotion = (id: string) => {
+    setPromotions((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          const nextStatus = p.status === 'PAUSED' ? 'LIVE' : 'PAUSED';
+          return { ...p, status: nextStatus };
+        }
+        return p;
+      })
+    );
+  };
+
   // 8. Promote Offer (Generate Unique Link)
   const promoteOffer = (
     promotionId: string,
@@ -552,6 +571,7 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
         simulatePaymentStatusChange,
         createPromotion,
         updatePromotionStatus,
+        togglePausePromotion,
         promoteOffer,
         simulateAdClick,
         sendReferral,

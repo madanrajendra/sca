@@ -1,139 +1,272 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
 import { StatsCard } from '../../components/common/StatsCard';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
-import { AlertBanner } from '../../components/common/AlertBanner';
-import { Globe, Building2, Users, Grid, Sparkles, Handshake, TrendingUp, AlertTriangle } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import { Modal } from '../../components/common/Modal';
+import { Table, type Column } from '../../components/common/Table';
+import { GlobalAllianceSelector } from '../../components/admin/GlobalAllianceSelector';
+import { AllianceDetailsModal } from '../../components/admin/AllianceDetailsModal';
+import type { Alliance } from '../../types';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from 'recharts';
+import {
+  Globe,
+  Building2,
+  Users,
+  Grid,
+  Sparkles,
+  Handshake,
+  AlertTriangle,
+  Plus,
+  ArrowRight,
+  TrendingUp,
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
 
 export const NationalAdminDashboard: React.FC = () => {
-  const { alliances, businesses, categories, promotions, referrals } = useSCAData();
+  const { alliances, businesses, categories, promotions, referrals, createAlliance } = useSCAData();
   const navigate = useNavigate();
 
-  const activeMembersCount = businesses.filter((b) => b.membershipStatus === 'ACTIVE').length;
-  const pendingAppsCount = businesses.filter((b) => b.membershipStatus === 'PENDING_APPROVAL').length;
-  const paymentProblemCount = businesses.filter((b) => b.membershipStatus === 'PAYMENT_FAILED_VIEW_ONLY').length;
+  // Reactive Global Alliance Context State
+  const [selectedAllianceId, setSelectedAllianceId] = useState<string>('ALL');
 
-  const totalReferralValue = referrals
-    .filter((r) => r.status === 'WON')
-    .reduce((sum, r) => sum + (r.recordedValue || 0), 0);
+  // Modals state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedAllianceForDetail, setSelectedAllianceForDetail] = useState<Alliance | null>(null);
 
-  const growthData = [
-    { month: 'Mar', members: 60, referrals: 15 },
-    { month: 'Apr', members: 78, referrals: 28 },
-    { month: 'May', members: 92, referrals: 45 },
-    { month: 'Jun', members: 110, referrals: 62 },
-    { month: 'Jul', members: 118, referrals: 89 },
-    { month: 'Aug', members: 127, referrals: 112 },
+  // Form state for New Alliance
+  const [newAllianceForm, setNewAllianceForm] = useState({
+    name: '',
+    city: '',
+    state: '',
+    country: 'India',
+  });
+
+  // Filter entities reactively by selected alliance context
+  const filteredAlliances = alliances.filter((a) => selectedAllianceId === 'ALL' || a.id === selectedAllianceId);
+  const filteredBusinesses = businesses.filter((b) => selectedAllianceId === 'ALL' || b.allianceId === selectedAllianceId);
+  const filteredPromotions = promotions.filter((p) => selectedAllianceId === 'ALL' || p.allianceId === selectedAllianceId);
+  const filteredReferrals = referrals.filter((r) => selectedAllianceId === 'ALL' || r.allianceId === selectedAllianceId);
+
+  // 8 Global Metric Computations
+  const totalAlliancesCount = selectedAllianceId === 'ALL' ? alliances.length : 1;
+  const totalBusinessesCount = filteredBusinesses.length;
+  const activeMembersCount = filteredBusinesses.filter((b) => b.membershipStatus === 'ACTIVE').length;
+  const pendingAppsCount = filteredBusinesses.filter((b) => b.membershipStatus === 'PENDING_APPROVAL').length;
+  const activePromotionsCount = filteredPromotions.filter((p) => p.status === 'LIVE').length;
+  const totalReferralsCount = filteredReferrals.length;
+  const referralResultsCount = filteredReferrals.filter((r) => r.status === 'WON').length;
+  const openCategoriesCount = categories.reduce((acc, cat) => {
+    if (selectedAllianceId === 'ALL') {
+      const occupiedInSome = Object.values(cat.allianceMap).filter((st) => st.status === 'OCCUPIED').length;
+      return acc + (alliances.length - occupiedInSome);
+    } else {
+      const st = cat.allianceMap[selectedAllianceId];
+      return acc + (st && st.status === 'OCCUPIED' ? 0 : 1);
+    }
+  }, 0);
+
+  // System Alerts Box Data
+  const pendingPromosCount = filteredPromotions.filter((p) => p.status === 'PENDING').length;
+  const paymentIssuesCount = filteredBusinesses.filter((b) => b.membershipStatus === 'PAYMENT_FAILED_VIEW_ONLY' || b.membershipStatus === 'LAPSED').length;
+
+  // Recharts Activity Chart Mock Data
+  const growthChartData = [
+    { month: 'Jan', members: 45, alliances: 3, promotions: 12, referrals: 18 },
+    { month: 'Feb', members: 68, alliances: 4, promotions: 24, referrals: 32 },
+    { month: 'Mar', members: 92, alliances: 4, promotions: 38, referrals: 45 },
+    { month: 'Apr', members: 115, alliances: 5, promotions: 54, referrals: 68 },
+    { month: 'May', members: 141, alliances: 5, promotions: 72, referrals: 95 },
+  ];
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAllianceForm.name || !newAllianceForm.city) return;
+    createAlliance(newAllianceForm.name, newAllianceForm.city, newAllianceForm.state, newAllianceForm.country);
+    setShowCreateModal(false);
+    setNewAllianceForm({ name: '', city: '', state: '', country: 'India' });
+  };
+
+  const allianceColumns: Column<Alliance>[] = [
+    {
+      header: 'Alliance Name',
+      accessor: (row) => (
+        <div>
+          <p className="font-bold text-slate-900 text-xs">{row.name}</p>
+          <p className="text-[10px] text-slate-500">{row.city}, {row.country}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Active Members',
+      accessor: (row) => <span className="font-bold text-xs text-slate-900">{row.memberCount}</span>,
+    },
+    {
+      header: 'Occupied Categories',
+      accessor: (row) => (
+        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+          {row.occupiedCategoriesCount} / {row.totalCategoriesCount}
+        </span>
+      ),
+    },
+    {
+      header: 'Open Categories',
+      accessor: (row) => (
+        <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+          {row.totalCategoriesCount - row.occupiedCategoriesCount} open
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessor: (row) => (
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          ● {row.status}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      accessor: (row) => (
+        <Button size="sm" variant="outline" onClick={() => setSelectedAllianceForDetail(row)}>
+          View Details
+        </Button>
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400 bg-purple-950 px-2.5 py-1 rounded border border-purple-800">
-            Global Governance Console
+      {/* National Overview Header with Reactive Global Selector */}
+      <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800">
+            Platform Master Console
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-2">
-            National Admin Control Center
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Global platform visibility across all city alliances, members, categories, and referral value.
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">National Overview</h1>
+          <p className="text-xs text-slate-300 max-w-xl mt-1 leading-relaxed">
+            Monitor and manage the Spin City Alliance platform. Filter statistics reactively by city alliance.
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button onClick={() => navigate('/admin/alliances')} variant="secondary" leftIcon={<Globe className="w-4 h-4" />}>
-            Manage Alliances
-          </Button>
-          <Button onClick={() => navigate('/admin/categories')} variant="outline" className="bg-slate-800 text-white border-slate-700">
-            Categories Exclusivity
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10">
+          <GlobalAllianceSelector
+            selectedAllianceId={selectedAllianceId}
+            onSelectAlliance={setSelectedAllianceId}
+          />
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            variant="secondary"
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            + Create Alliance
           </Button>
         </div>
       </div>
 
-      {/* Action Alerts */}
-      {(pendingAppsCount > 0 || paymentProblemCount > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {pendingAppsCount > 0 && (
-            <AlertBanner
-              variant="warning"
-              title={`${pendingAppsCount} Business Applications Pending Approval`}
-              message="New business applicants are awaiting Alliance Admin review and category exclusivity checks."
-              actionText="Review Applications"
-              onAction={() => navigate('/alliance/applications')}
-            />
-          )}
-
-          {paymentProblemCount > 0 && (
-            <AlertBanner
-              variant="danger"
-              title={`${paymentProblemCount} Member Payment Issues`}
-              message="Businesses currently in View-Only mode due to payment failure."
-              actionText="View Businesses"
-              onAction={() => navigate('/admin/businesses')}
-            />
-          )}
+      {/* SYSTEM ALERTS BOX */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Pending Applications: <strong>{pendingAppsCount}</strong></span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/businesses')}>View</Button>
         </div>
-      )}
 
-      {/* Global Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total City Alliances"
-          value={alliances.length}
-          subtitle="Bangalore, Austin, NYC, London"
-          icon={<Globe className="w-5 h-5 text-purple-600" />}
-          iconBgColor="bg-purple-50"
-        />
-        <StatsCard
-          title="Active Member Businesses"
-          value={activeMembersCount}
-          subtitle={`${businesses.length} total on platform`}
-          icon={<Building2 className="w-5 h-5 text-blue-600" />}
-          iconBgColor="bg-blue-50"
-        />
-        <StatsCard
-          title="Live AdShare Promotions"
-          value={promotions.filter((p) => p.status === 'LIVE').length}
-          subtitle="Active co-marketing offers"
-          icon={<Sparkles className="w-5 h-5 text-emerald-600" />}
-          iconBgColor="bg-emerald-50"
-        />
-        <StatsCard
-          title="Total Closed Referral Value"
-          value={`$${totalReferralValue.toLocaleString()}`}
-          subtitle="Tracked B2B deal volume"
-          icon={<Handshake className="w-5 h-5 text-amber-600" />}
-          iconBgColor="bg-amber-50"
-        />
+        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+            <span>Pending Promotions: <strong>{pendingPromosCount}</strong></span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/promotions')}>Review</Button>
+        </div>
+
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>Payment Issues: <strong>{paymentIssuesCount}</strong></span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/businesses')}>Manage</Button>
+        </div>
+
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-900">
+          <div className="flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Total Referrals Won: <strong>{referralResultsCount}</strong></span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/referrals')}>View</Button>
+        </div>
       </div>
 
-      {/* Growth Chart & Quick Management */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+      {/* 8 GLOBAL METRICS GRID */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="p-3.5 bg-white border border-slate-200 rounded-xl">
+          <span className="text-[10px] font-bold text-slate-500 uppercase">Total Alliances</span>
+          <p className="text-xl font-bold text-slate-900 mt-1">{totalAlliancesCount}</p>
+        </div>
+        <div className="p-3.5 bg-white border border-slate-200 rounded-xl">
+          <span className="text-[10px] font-bold text-slate-500 uppercase">Total Businesses</span>
+          <p className="text-xl font-bold text-slate-900 mt-1">{totalBusinessesCount}</p>
+        </div>
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <span className="text-[10px] font-bold text-emerald-800 uppercase">Active Members</span>
+          <p className="text-xl font-bold text-emerald-900 mt-1">{activeMembersCount}</p>
+        </div>
+        <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
+          <span className="text-[10px] font-bold text-blue-800 uppercase">Open Categories</span>
+          <p className="text-xl font-bold text-blue-900 mt-1">{openCategoriesCount}</p>
+        </div>
+        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl">
+          <span className="text-[10px] font-bold text-purple-800 uppercase">Active Promos</span>
+          <p className="text-xl font-bold text-purple-900 mt-1">{activePromotionsCount}</p>
+        </div>
+        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+          <span className="text-[10px] font-bold text-slate-700 uppercase">Total Referrals</span>
+          <p className="text-xl font-bold text-slate-900 mt-1">{totalReferralsCount}</p>
+        </div>
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <span className="text-[10px] font-bold text-emerald-800 uppercase">Referral Won</span>
+          <p className="text-xl font-bold text-emerald-900 mt-1">{referralResultsCount}</p>
+        </div>
+        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+          <span className="text-[10px] font-bold text-slate-700 uppercase">Pending Apps</span>
+          <p className="text-xl font-bold text-amber-600 mt-1">{pendingAppsCount}</p>
+        </div>
+      </div>
+
+      {/* RECHARTS ACTIVITY GRAPHS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
           <CardHeader>
-            <CardTitle subtitle="Platform growth over the last 6 months">Member & Referral Growth</CardTitle>
+            <CardTitle subtitle="Platform-wide registration trend">Member & Alliance Growth</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
+            <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={growthData}>
-                  <defs>
-                    <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} />
-                  <YAxis stroke="#94a3b8" fontSize={11} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="members" stroke="#3b82f6" fillOpacity={1} fill="url(#colorMembers)" />
-                </AreaChart>
+                <LineChart data={growthChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748B' }} />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                  <Line type="monotone" dataKey="members" stroke="#2563EB" strokeWidth={2.5} name="Active Members" />
+                  <Line type="monotone" dataKey="alliances" stroke="#059669" strokeWidth={2.5} name="City Alliances" />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -141,24 +274,111 @@ export const NationalAdminDashboard: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle subtitle="Alliance network breakdown">Active City Alliances</CardTitle>
+            <CardTitle subtitle="AdShare and Referral exchange velocity">Promotions & Referral Activity</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {alliances.map((all) => (
-              <div key={all.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">{all.name}</h4>
-                  <p className="text-[10px] text-slate-500">{all.city}, {all.country}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold text-blue-700">{all.memberCount} Members</span>
-                  <p className="text-[10px] text-emerald-600 font-semibold">{all.occupiedCategoriesCount} Occupied</p>
-                </div>
-              </div>
-            ))}
+          <CardContent>
+            <div className="h-56 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={growthChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#64748B' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748B' }} />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="promotions" fill="#9333EA" radius={[4, 4, 0, 0]} name="Promotions" />
+                  <Bar dataKey="referrals" fill="#059669" radius={[4, 4, 0, 0]} name="Referrals" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* ALLIANCES TABLE */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle subtitle="Managed city alliances">All City Alliances</CardTitle>
+          <Button size="sm" onClick={() => setShowCreateModal(true)} leftIcon={<Plus className="w-3.5 h-3.5" />}>
+            Create Alliance
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table data={filteredAlliances} columns={allianceColumns} keyExtractor={(a) => a.id} />
+        </CardContent>
+      </Card>
+
+      {/* CREATE ALLIANCE MODAL */}
+      {showCreateModal && (
+        <Modal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title="Create New City Alliance"
+          subtitle="Establish a new category-exclusive business alliance"
+        >
+          <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Alliance Name</label>
+              <input
+                type="text"
+                value={newAllianceForm.name}
+                onChange={(e) => setNewAllianceForm({ ...newAllianceForm, name: e.target.value })}
+                placeholder="e.g. Hyderabad Executive Alliance"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">City</label>
+                <input
+                  type="text"
+                  value={newAllianceForm.city}
+                  onChange={(e) => setNewAllianceForm({ ...newAllianceForm, city: e.target.value })}
+                  placeholder="e.g. Hyderabad"
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">State / Province</label>
+                <input
+                  type="text"
+                  value={newAllianceForm.state}
+                  onChange={(e) => setNewAllianceForm({ ...newAllianceForm, state: e.target.value })}
+                  placeholder="e.g. Telangana"
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Country</label>
+              <input
+                type="text"
+                value={newAllianceForm.country}
+                onChange={(e) => setNewAllianceForm({ ...newAllianceForm, country: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary">
+                Establish Alliance
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ALLIANCE DETAILS MODAL */}
+      <AllianceDetailsModal
+        alliance={selectedAllianceForDetail}
+        onClose={() => setSelectedAllianceForDetail(null)}
+      />
     </div>
   );
 };

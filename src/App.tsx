@@ -9,30 +9,39 @@ import { ProtectedRoute } from './components/rbac/ProtectedRoute';
 import { Login } from './pages/auth/Login';
 import { BusinessOnboarding } from './pages/auth/BusinessOnboarding';
 
+// Phase 2 Onboarding & Payment Components & Pages
+import { BusinessApplicationWizard } from './components/onboarding/BusinessApplicationWizard';
+import { ApplicationStatusPage } from './pages/onboarding/ApplicationStatusPage';
+import { MembershipCheckoutPage } from './pages/payment/MembershipCheckoutPage';
+import { ProfileCompletionPage } from './pages/profile/ProfileCompletionPage';
+
 // Common / Shared Pages
 import { NotificationsPage } from './pages/common/NotificationsPage';
 import { SettingsPage } from './pages/common/SettingsPage';
 import { AnalyticsOverview } from './pages/common/AnalyticsOverview';
 import { PermissionDeniedState } from './components/common/PermissionDeniedState';
 
-// Business Owner Pages
-import { BusinessDashboard } from './pages/app/BusinessDashboard';
+// Phase 3 & 4/5 Core Active Pages
+import { TeamMemberDashboard } from './pages/team/TeamMemberDashboard';
+import { TeamMemberProfilePage } from './pages/team/TeamMemberProfilePage';
+import { TeamRestrictedAccess } from './pages/team/TeamRestrictedAccess';
+
+// Active Functional Workflows
 import { AdShareMarketplace } from './pages/app/AdShareMarketplace';
 import { CreatePromotionWizard } from './pages/app/CreatePromotionWizard';
 import { MyPromotions } from './pages/app/MyPromotions';
 import { PromotedByMe } from './pages/app/PromotedByMe';
-import { ReferralHub } from './pages/app/ReferralHub';
 import { BusinessDirectory } from './pages/app/BusinessDirectory';
+import { ReferralHub } from './pages/app/ReferralHub';
 import { MyBusinessProfile } from './pages/app/MyBusinessProfile';
 import { TeamManagement } from './pages/app/TeamManagement';
 
-// National Admin Pages
+// Business Owner Dashboard & Admin Dashboards
+import { BusinessDashboard } from './pages/app/BusinessDashboard';
 import { NationalAdminDashboard } from './pages/admin/NationalAdminDashboard';
 import { BusinessesAdmin } from './pages/admin/BusinessesAdmin';
 import { CategoriesAdmin } from './pages/admin/CategoriesAdmin';
 import { ActivityAuditLog } from './pages/admin/ActivityAuditLog';
-
-// Alliance Admin Pages
 import { AllianceAdminDashboard } from './pages/alliance/AllianceAdminDashboard';
 
 export function App() {
@@ -41,16 +50,23 @@ export function App() {
       <AuthProvider>
         <SCADataProvider>
           <Routes>
-            {/* Public Auth Routes */}
+            {/* Public Auth & Onboarding Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<BusinessOnboarding />} />
+            <Route path="/signup" element={<BusinessApplicationWizard />} />
             <Route path="/forgot-password" element={<Login />} />
+            <Route path="/onboarding/apply" element={<BusinessApplicationWizard />} />
 
             {/* Application Main Layout Container */}
             <Route element={<AppLayout />}>
               {/* Default Redirect */}
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/access-denied" element={<PermissionDeniedState />} />
+
+              {/* Phase 2 Status & Checkout Routes */}
+              <Route path="/onboarding/status" element={<ApplicationStatusPage />} />
+              <Route path="/app/payment" element={<MembershipCheckoutPage />} />
+              <Route path="/app/membership-lapsed" element={<MembershipCheckoutPage />} />
+              <Route path="/app/profile-completion" element={<ProfileCompletionPage />} />
 
               {/* ------------------- ROLE 1: NATIONAL ADMIN ------------------- */}
               <Route
@@ -70,39 +86,7 @@ export function App() {
                 }
               />
               <Route
-                path="/admin/alliances/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <NationalAdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/admin/businesses"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <BusinessesAdmin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/businesses/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <BusinessesAdmin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <BusinessesAdmin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/users/:id"
                 element={
                   <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
                     <BusinessesAdmin />
@@ -121,28 +105,12 @@ export function App() {
                 path="/admin/promotions"
                 element={
                   <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <MyPromotions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/promotions/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <MyPromotions />
+                    <AdShareMarketplace />
                   </ProtectedRoute>
                 }
               />
               <Route
                 path="/admin/referrals"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
-                    <ReferralHub />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/referrals/:id"
                 element={
                   <ProtectedRoute allowedRoles={['NATIONAL_ADMIN']}>
                     <ReferralHub />
@@ -200,23 +168,7 @@ export function App() {
                 }
               />
               <Route
-                path="/alliance/applications/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
-                    <AllianceAdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/alliance/members"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
-                    <BusinessesAdmin />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/alliance/members/:id"
                 element={
                   <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
                     <BusinessesAdmin />
@@ -240,23 +192,7 @@ export function App() {
                 }
               />
               <Route
-                path="/alliance/promotions/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
-                    <AdShareMarketplace />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/alliance/referrals"
-                element={
-                  <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
-                    <ReferralHub />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/alliance/referrals/:id"
                 element={
                   <ProtectedRoute allowedRoles={['NATIONAL_ADMIN', 'ALLIANCE_ADMIN']}>
                     <ReferralHub />
@@ -314,14 +250,6 @@ export function App() {
                 }
               />
               <Route
-                path="/app/adshare/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <AdShareMarketplace />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/app/promotions"
                 element={
                   <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
@@ -338,30 +266,6 @@ export function App() {
                 }
               />
               <Route
-                path="/app/promotions/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <MyPromotions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/promotions/:id/edit"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <CreatePromotionWizard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/promotions/:id/analytics"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <MyPromotions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/app/promoted"
                 element={
                   <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
@@ -371,22 +275,6 @@ export function App() {
               />
               <Route
                 path="/app/referrals"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <ReferralHub />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/referrals/create"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <ReferralHub />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/app/referrals/:id"
                 element={
                   <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
                     <ReferralHub />
@@ -426,14 +314,6 @@ export function App() {
                 }
               />
               <Route
-                path="/app/team/invite"
-                element={
-                  <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <TeamManagement />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/app/notifications"
                 element={
                   <ProtectedRoute allowedRoles={['BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
@@ -455,20 +335,12 @@ export function App() {
                 path="/team/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <BusinessDashboard />
+                    <TeamMemberDashboard />
                   </ProtectedRoute>
                 }
               />
               <Route
                 path="/team/adshare"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <AdShareMarketplace />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/team/adshare/:id"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
                     <AdShareMarketplace />
@@ -492,14 +364,6 @@ export function App() {
                 }
               />
               <Route
-                path="/team/referrals/:id"
-                element={
-                  <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <ReferralHub />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/team/directory"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
@@ -516,6 +380,14 @@ export function App() {
                 }
               />
               <Route
+                path="/team/profile"
+                element={
+                  <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
+                    <TeamMemberProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/team/notifications"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
@@ -527,9 +399,19 @@ export function App() {
                 path="/team/settings"
                 element={
                   <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'BUSINESS_OWNER', 'NATIONAL_ADMIN']}>
-                    <SettingsPage />
+                    <TeamMemberProfilePage />
                   </ProtectedRoute>
                 }
+              />
+
+              {/* Team Member Restricted Route Attempts */}
+              <Route
+                path="/team/team"
+                element={<TeamRestrictedAccess message="You don't have permission to manage team members." />}
+              />
+              <Route
+                path="/team/membership"
+                element={<TeamRestrictedAccess message="You don't have permission to manage membership." />}
               />
 
               {/* Catch-all */}

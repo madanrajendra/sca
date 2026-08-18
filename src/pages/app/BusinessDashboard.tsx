@@ -6,251 +6,191 @@ import { StatsCard } from '../../components/common/StatsCard';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
-import { AlertBanner } from '../../components/common/AlertBanner';
-import {
-  Sparkles,
-  Share2,
-  Handshake,
-  BookOpen,
-  Plus,
-  ArrowRight,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Building2,
-  MapPin,
-  Grid,
-} from 'lucide-react';
+import { Sparkles, Handshake, BookOpen, Building2, Grid, MapPin, AlertTriangle, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
 
 export const BusinessDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const { businesses, promotions, promotedOffers, referrals, simulatePaymentStatusChange } = useSCAData();
+  const { businesses, promotions, promotedOffers, referrals } = useSCAData();
   const navigate = useNavigate();
 
   const activeBiz = businesses.find((b) => b.id === currentUser.businessId) || businesses[0];
 
-  const myPromos = promotions.filter((p) => p.businessId === activeBiz.id);
-  const myPromotedShared = promotedOffers.filter((po) => po.promoterBusinessId === activeBiz.id);
-  const referralsReceived = referrals.filter((r) => r.receiverBusinessId === activeBiz.id);
-  const pendingReferralsCount = referralsReceived.filter((r) => r.status === 'SENT' || r.status === 'IN_REVIEW').length;
+  // Calculate live statistics
+  const myPromosCount = promotions.filter((p) => p.businessId === activeBiz.id).length;
+  const promosSharedCount = promotedOffers.filter((p) => p.promoterBusinessId === activeBiz.id).length;
+  const referralsReceivedCount = referrals.filter((r) => r.receiverBusinessId === activeBiz.id).length;
+  const activeOffersCount = activeBiz.currentOffer ? 1 : 0;
 
-  const totalWonValue = referrals
-    .filter((r) => (r.receiverBusinessId === activeBiz.id || r.senderBusinessId === activeBiz.id) && r.status === 'WON')
-    .reduce((sum, r) => sum + (r.recordedValue || 0), 0);
+  // Pending Referral requiring follow-up
+  const pendingReferral = referrals.find(
+    (r) => r.receiverBusinessId === activeBiz.id && (r.status === 'SENT' || r.status === 'IN_REVIEW')
+  );
 
   return (
     <div className="space-y-6">
-      {/* Good Morning Greeting Banner */}
+      {/* Business Owner Header */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge status={activeBiz.membershipStatus} />
+              <Badge status={activeBiz.membershipStatus} size="md" />
               <span className="text-xs text-slate-400 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-blue-400" /> {activeBiz.allianceName}
+                <MapPin className="w-3.5 h-3.5 text-blue-400" /> {activeBiz.allianceName}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Good morning, {activeBiz.name}
             </h1>
             <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
-              <span>Owner: {activeBiz.ownerName}</span>
+              <span>Category Leader: <strong className="text-white">{activeBiz.categoryName}</strong></span>
               <span>•</span>
-              <span className="flex items-center gap-1 text-slate-300">
-                <Grid className="w-3 h-3 text-emerald-400" /> Category: {activeBiz.categoryName}
-              </span>
+              <span>Owner: <strong className="text-slate-300">{activeBiz.ownerName}</strong></span>
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              onClick={() => navigate('/app/promotions/create')}
-              variant="secondary"
-              leftIcon={<Plus className="w-4 h-4" />}
-            >
-              Create Promotion
+          <div className="flex items-center gap-2">
+            <Button onClick={() => navigate('/app/business')} variant="outline" size="sm" className="bg-slate-800 text-white border-slate-700">
+              My Business Profile
             </Button>
-            <Button
-              onClick={() => navigate('/app/referrals/create')}
-              variant="outline"
-              className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700"
-              leftIcon={<Handshake className="w-4 h-4 text-emerald-400" />}
-            >
-              Send Referral
+            <Button onClick={() => navigate('/app/promotions/create')} variant="primary" size="sm">
+              + Create Promotion
             </Button>
           </div>
         </div>
       </div>
 
-      {/* MEMBERSHIP LOOP Alert Banner if Payment Problem */}
-      {activeBiz.membershipStatus === 'PAYMENT_FAILED_VIEW_ONLY' && (
-        <AlertBanner
-          variant="danger"
-          title="Payment Problem — View-Only Mode Active"
-          message="Your monthly membership payment failed. Your business profile is currently hidden from other members in the directory and AdShare marketplace. Resolve payment to restore full active membership."
-          actionText="Resolve Payment ($199)"
-          onAction={() => simulatePaymentStatusChange(activeBiz.id, 'ACTIVE')}
-        />
+      {/* REFERRAL REMINDER CARD */}
+      {pendingReferral && (
+        <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl shrink-0">
+              <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded">
+                Referral Needs Follow-Up
+              </span>
+              <h4 className="text-xs font-bold text-slate-900 mt-1">
+                Customer: {pendingReferral.customerName} (From {pendingReferral.senderBusinessName})
+              </h4>
+              <p className="text-[11px] text-slate-600">
+                Received: {pendingReferral.dateSent} • Status: <strong className="text-amber-800">{pendingReferral.status}</strong>
+              </p>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate('/app/referrals')}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+          >
+            View Referral
+          </Button>
+        </div>
       )}
 
-      {/* Key Metrics Grid */}
+      {/* Statistics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="My Active Promotions"
-          value={myPromos.length}
-          subtitle={`${myPromos.reduce((s, p) => s + p.views, 0)} total views`}
-          icon={<Share2 className="w-5 h-5 text-blue-600" />}
-          iconBgColor="bg-blue-50"
-        />
-        <StatsCard
-          title="Promotions Shared"
-          value={myPromotedShared.length}
-          subtitle={`${myPromotedShared.reduce((s, po) => s + po.clicks, 0)} clicks generated`}
+          title="My Promotions"
+          value={myPromosCount.toString()}
+          subtitle="Published co-marketing offers"
           icon={<Sparkles className="w-5 h-5 text-purple-600" />}
           iconBgColor="bg-purple-50"
         />
         <StatsCard
+          title="Promotions Shared"
+          value={promosSharedCount.toString()}
+          subtitle="Partner offers shared"
+          icon={<Handshake className="w-5 h-5 text-blue-600" />}
+          iconBgColor="bg-blue-50"
+        />
+        <StatsCard
           title="Referrals Received"
-          value={referralsReceived.length}
-          subtitle={`${pendingReferralsCount} waiting follow-up`}
-          icon={<Handshake className="w-5 h-5 text-emerald-600" />}
+          value={referralsReceivedCount.toString()}
+          subtitle="Customer leads in exchange"
+          icon={<BookOpen className="w-5 h-5 text-emerald-600" />}
           iconBgColor="bg-emerald-50"
         />
         <StatsCard
-          title="Closed Referral Value"
-          value={`$${totalWonValue.toLocaleString()}`}
-          subtitle="Recorded value from alliance"
-          icon={<Building2 className="w-5 h-5 text-amber-600" />}
+          title="Active Offers"
+          value={activeOffersCount.toString()}
+          subtitle="Alliance directory offer"
+          icon={<Tag className="w-5 h-5 text-amber-600" />}
           iconBgColor="bg-amber-50"
         />
       </div>
 
-      {/* Content Grid: Needs Attention & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Needs Attention Panel */}
-        <Card className="lg:col-span-2">
+      {/* Dashboard Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle subtitle="Tasks requiring immediate action">Needs Attention</CardTitle>
-            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-              {pendingReferralsCount > 0 ? `${pendingReferralsCount} Items` : 'All Clear'}
-            </span>
+            <CardTitle subtitle="Alliance workspace hubs">Primary Workflows</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {pendingReferralsCount > 0 ? (
-              referralsReceived
-                .filter((r) => r.status === 'SENT' || r.status === 'IN_REVIEW')
-                .map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-4 hover:border-slate-300 transition-all"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-amber-100 text-amber-700 rounded-lg shrink-0 mt-0.5">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900">
-                          Referral Received: {r.customerName}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Sent by <span className="font-semibold text-slate-700">{r.senderBusinessName}</span> • Estimated Value: ${r.estimatedValue?.toLocaleString() || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`/app/referrals/${r.id}`)}
-                      rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-                    >
-                      Follow Up
-                    </Button>
-                  </div>
-                ))
-            ) : (
-              <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-                No pending referrals requiring attention. Great job!
-              </div>
-            )}
-
-            {/* Expiring Offer Notification */}
-            <div className="p-4 bg-blue-50/60 border border-blue-100 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-4 h-4 text-blue-600 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">AdShare Marketplace Active</h4>
-                  <p className="text-[11px] text-slate-600">
-                    Your AI Audit promotion has 8 members actively sharing tracking links.
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => navigate('/app/promotions')}>
-                View Performance
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions & Directory Shortcut */}
-        <Card>
-          <CardHeader>
-            <CardTitle subtitle="Alliance shortcuts">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/app/adshare')}
-              className="w-full p-3 bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-200 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+              className="p-4 bg-slate-50 hover:bg-purple-50/50 border border-slate-200 hover:border-purple-200 rounded-xl text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-700">
-                    Explore AdShare Marketplace
-                  </h4>
-                  <p className="text-[10px] text-slate-500">Promote other member offers</p>
-                </div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <Sparkles className="w-5 h-5 text-purple-600" />
+                <h4 className="font-bold text-xs text-slate-900 group-hover:text-purple-700">AdShare Marketplace</h4>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600" />
+              <p className="text-[11px] text-slate-500">Discover and promote partner offers with trackable links</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/app/referrals')}
+              className="p-4 bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-200 rounded-xl text-left transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-2.5 mb-2">
+                <Handshake className="w-5 h-5 text-emerald-600" />
+                <h4 className="font-bold text-xs text-slate-900 group-hover:text-emerald-700">Referral Exchange</h4>
+              </div>
+              <p className="text-[11px] text-slate-500">Send and receive warm B2B leads with consent</p>
             </button>
 
             <button
               onClick={() => navigate('/app/directory')}
-              className="w-full p-3 bg-slate-50 hover:bg-purple-50/60 border border-slate-200 hover:border-purple-200 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+              className="p-4 bg-slate-50 hover:bg-blue-50/50 border border-slate-200 hover:border-blue-200 rounded-xl text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 text-purple-700 rounded-lg">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-700">
-                    Private Business Directory
-                  </h4>
-                  <p className="text-[10px] text-slate-500">Find category leaders in alliance</p>
-                </div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                <h4 className="font-bold text-xs text-slate-900 group-hover:text-blue-700">Business Directory</h4>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600" />
+              <p className="text-[11px] text-slate-500">Connect with category leaders in your city alliance</p>
             </button>
 
             <button
-              onClick={() => navigate('/app/business')}
-              className="w-full p-3 bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-200 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer"
+              onClick={() => navigate('/app/team')}
+              className="p-4 bg-slate-50 hover:bg-amber-50/50 border border-slate-200 hover:border-amber-200 rounded-xl text-left transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700">
-                    Edit Business Profile
-                  </h4>
-                  <p className="text-[10px] text-slate-500">Update logo, description & offer</p>
-                </div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <Building2 className="w-5 h-5 text-amber-600" />
+                <h4 className="font-bold text-xs text-slate-900 group-hover:text-amber-700">Team Management</h4>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600" />
+              <p className="text-[11px] text-slate-500">Invite team members and track invitation states</p>
             </button>
+          </CardContent>
+        </Card>
+
+        {/* Business Category Card */}
+        <Card className="bg-slate-900 text-white">
+          <CardHeader className="border-slate-800">
+            <CardTitle className="text-white" subtitle="Locked Category Exclusivity">My Alliance Slot</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-xs text-slate-300">
+            <div className="p-3 bg-slate-800 rounded-xl border border-slate-700">
+              <span className="text-[10px] text-emerald-400 font-bold uppercase block">Category Representation</span>
+              <p className="text-sm font-bold text-white mt-0.5">{activeBiz.categoryName}</p>
+              <p className="text-[11px] text-slate-400 mt-1">Alliance: {activeBiz.allianceName}</p>
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              You are the exclusive {activeBiz.categoryName} representative in {activeBiz.allianceName}. No other business in this category can join this alliance.
+            </p>
           </CardContent>
         </Card>
       </div>

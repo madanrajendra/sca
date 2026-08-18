@@ -5,7 +5,7 @@ import { useSCAData } from '../../context/SCADataContext';
 import { Button } from '../../components/common/Button';
 import { Card, CardContent } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
-import { ArrowLeft, ArrowRight, Sparkles, Check, Tag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Check, Tag, Upload, Eye } from 'lucide-react';
 
 export const CreatePromotionWizard: React.FC = () => {
   const { currentUser } = useAuth();
@@ -36,6 +36,13 @@ export const CreatePromotionWizard: React.FC = () => {
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
   ];
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const fakeUrl = URL.createObjectURL(e.target.files[0]);
+      setFormData((prev) => ({ ...prev, imageUrl: fakeUrl }));
+    }
+  };
+
   const handlePublish = () => {
     createPromotion({
       businessId: activeBiz.id,
@@ -57,37 +64,41 @@ export const CreatePromotionWizard: React.FC = () => {
       status: 'LIVE',
     });
 
-    navigate('/app/promotions');
+    setStep(5); // Published success state
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Back Button */}
-      <Button variant="ghost" size="sm" onClick={() => navigate('/app/promotions')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-        Back to My Promotions
-      </Button>
+      {step < 5 && (
+        <Button variant="ghost" size="sm" onClick={() => navigate('/app/promotions')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
+          Back to My Promotions
+        </Button>
+      )}
 
       {/* Progress Header */}
-      <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Create AdShare Promotion</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Step {step} of 4 — {['Offer Details', 'Creative Image', 'Sharing Copy', 'Live Preview & Publish'][step - 1]}
-          </p>
+      {step < 5 && (
+        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Create AdShare Promotion</h1>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Step {step} of 4 — {['Details', 'Creative Image', 'Share Content', 'Live Card Preview'][step - 1]}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-semibold">{activeBiz.categoryName}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-          <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-xs font-semibold">{activeBiz.categoryName}</span>
-        </div>
-      </div>
+      )}
 
       <Card>
         <CardContent className="p-6">
+          {/* STEP 1: DETAILS */}
           {step === 1 && (
             <div className="space-y-4 animate-in fade-in duration-150">
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">1. Campaign Details</h2>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Campaign Headline Title</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Campaign Title</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -99,7 +110,7 @@ export const CreatePromotionWizard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Exclusive Member Offer</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Exclusive Member Offer</label>
                 <input
                   type="text"
                   value={formData.offer}
@@ -110,9 +121,9 @@ export const CreatePromotionWizard: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Short Card Summary</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Short Description (Card Summary)</label>
                   <input
                     type="text"
                     value={formData.shortDescription}
@@ -122,7 +133,7 @@ export const CreatePromotionWizard: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Call to Action (CTA)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Call to Action (CTA)</label>
                   <input
                     type="text"
                     value={formData.cta}
@@ -133,8 +144,29 @@ export const CreatePromotionWizard: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">End Date / Expiry</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Full Offer Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Description</label>
                 <textarea
                   rows={3}
                   value={formData.description}
@@ -150,17 +182,34 @@ export const CreatePromotionWizard: React.FC = () => {
                   disabled={!formData.title || !formData.offer}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Next: Creative Image
+                  Next: Upload Creative
                 </Button>
               </div>
             </div>
           )}
 
+          {/* STEP 2: CREATIVE */}
           {step === 2 && (
             <div className="space-y-4 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">2. Select Creative Image</h2>
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">2. Upload Creative Image</h2>
+
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <img src={formData.imageUrl} alt="Creative Preview" className="w-16 h-16 rounded-xl object-cover border border-slate-300 shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900">Upload Custom Image</h4>
+                    <p className="text-[11px] text-slate-500">1200 x 630 px recommended</p>
+                  </div>
+                </div>
+                <label className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors flex items-center gap-1.5">
+                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Choose File</span>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
+              </div>
+
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Image URL</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Or Image URL</label>
                 <input
                   type="text"
                   value={formData.imageUrl}
@@ -170,7 +219,7 @@ export const CreatePromotionWizard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-2">Or Choose From Presets</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-2">Preset Images</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {presetImages.map((imgUrl, idx) => (
                     <div
@@ -196,21 +245,19 @@ export const CreatePromotionWizard: React.FC = () => {
                   Back
                 </Button>
                 <Button onClick={() => setStep(3)} rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Next: Sharing Copy
+                  Next: Share Content
                 </Button>
               </div>
             </div>
           )}
 
+          {/* STEP 3: SHARE CONTENT */}
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">3. Social Sharing Copy</h2>
-              <p className="text-xs text-slate-500">
-                Provide copy that fellow alliance members can copy & paste when sharing your link:
-              </p>
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">3. Social Share Content</h2>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Share Headline</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Share Headline</label>
                 <input
                   type="text"
                   value={formData.shareHeadline}
@@ -220,7 +267,7 @@ export const CreatePromotionWizard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Share Body Message</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Share Message</label>
                 <textarea
                   rows={3}
                   value={formData.shareMessage}
@@ -230,7 +277,7 @@ export const CreatePromotionWizard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Destination Landing Page URL</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Destination URL</label>
                 <input
                   type="text"
                   value={formData.destinationUrl}
@@ -244,24 +291,22 @@ export const CreatePromotionWizard: React.FC = () => {
                   Back
                 </Button>
                 <Button onClick={() => setStep(4)} rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Next: Preview & Publish
+                  Next: Live Card Preview
                 </Button>
               </div>
             </div>
           )}
 
+          {/* STEP 4: PREVIEW */}
           {step === 4 && (
             <div className="space-y-6 animate-in fade-in duration-150">
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">4. Campaign Card Preview</h2>
 
-              {/* Preview Card */}
               <div className="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
                 <div className="relative h-48 w-full bg-slate-100">
                   <img src={formData.imageUrl} alt={formData.title} className="w-full h-full object-cover" />
                   <div className="absolute top-3 left-3">
-                    <Badge variant="purple" size="sm">
-                      {activeBiz.categoryName}
-                    </Badge>
+                    <Badge variant="purple">{activeBiz.categoryName}</Badge>
                   </div>
                 </div>
                 <div className="p-5">
@@ -285,6 +330,25 @@ export const CreatePromotionWizard: React.FC = () => {
                 </Button>
                 <Button onClick={handlePublish} variant="success">
                   Publish to AdShare Marketplace
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: PUBLISHED CONFIRMATION */}
+          {step === 5 && (
+            <div className="text-center py-6 space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto border border-emerald-300 shadow-inner">
+                <Check className="w-8 h-8 stroke-[3]" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Your promotion is live! 🎉</h2>
+              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                Alliance members can now discover and promote your offer across the private business alliance network.
+              </p>
+
+              <div className="pt-4 flex justify-center gap-3">
+                <Button onClick={() => navigate('/app/adshare')} variant="primary" size="lg">
+                  View in Marketplace
                 </Button>
               </div>
             </div>
