@@ -17,7 +17,7 @@ export const Topbar: React.FC = () => {
   const unreadCount = userNotifs.filter((n) => !n.read).length;
 
   return (
-    <header className="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between sticky top-[37px] z-40 shadow-2xs">
+    <header className="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between sticky top-0 z-40 shadow-2xs">
       {/* Search & Alliance Scope */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700">

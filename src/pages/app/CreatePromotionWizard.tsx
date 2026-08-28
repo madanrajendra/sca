@@ -1,360 +1,411 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useSCAData } from '../../context/SCADataContext';
-import { Button } from '../../components/common/Button';
-import { Card, CardContent } from '../../components/common/Card';
-import { Badge } from '../../components/common/Badge';
-import { ArrowLeft, ArrowRight, Sparkles, Check, Tag, Upload, Eye } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  Upload,
+  Image,
+  Video,
+  FileText,
+  Mail,
+  Globe,
+  Share2,
+  MessageSquare,
+  ShieldCheck,
+  Eye,
+  Send,
+  Save,
+  Clock
+} from 'lucide-react';
 
 export const CreatePromotionWizard: React.FC = () => {
-  const { currentUser } = useAuth();
-  const { businesses, createPromotion } = useSCAData();
   const navigate = useNavigate();
+  const { createPromotion, categories } = useSCAData();
+  const { currentUser } = useAuth();
 
-  const activeBiz = businesses.find((b) => b.id === currentUser.businessId) || businesses[0];
+  const [currentStep, setCurrentStep] = useState<number>(1);
 
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    title: '',
-    shortDescription: '',
-    description: '',
-    offer: '',
-    startDate: new Date().toISOString().substring(0, 10),
-    endDate: '2026-10-31',
-    cta: 'Claim Member Discount',
-    destinationUrl: 'https://apextech.io/sca-special',
-    imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80',
-    shareHeadline: '🚀 Exclusive Alliance Member Offer',
-    shareMessage: 'Check out this exclusive discount from our alliance partner Apex Tech Solutions:',
-  });
+  const [title, setTitle] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
+  const [description, setDescription] = useState('');
+  const [categoryName, setCategoryName] = useState('HVAC & Climate Services');
+  const [offer, setOffer] = useState('');
+  const [targetAudience, setTargetAudience] = useState('Local Homeowners');
+  const [location, setLocation] = useState('Austin Metro Area');
+  const [startDate, setStartDate] = useState(new Date().toISOString().substring(0, 10));
+  const [endDate, setEndDate] = useState('2026-10-31');
+  const [cta, setCta] = useState('Claim Free Offer');
+  const [destinationUrl, setDestinationUrl] = useState('https://abcheatingair.com/offer');
+  const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80');
 
-  const presetImages = [
-    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
-  ];
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [facebookPost, setFacebookPost] = useState('');
+  const [instagramCaption, setInstagramCaption] = useState('');
+  const [linkedInPost, setLinkedInPost] = useState('');
+  const [smsMessage, setSmsMessage] = useState('');
+  const [activeCopyTab, setActiveCopyTab] = useState<'email' | 'facebook' | 'instagram' | 'linkedin' | 'sms'>('email');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const fakeUrl = URL.createObjectURL(e.target.files[0]);
-      setFormData((prev) => ({ ...prev, imageUrl: fakeUrl }));
-    }
+  const handleNext = () => {
+    if (currentStep < 5) setCurrentStep((prev) => prev + 1);
   };
 
-  const handlePublish = () => {
+  const handlePrev = () => {
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSubmit = (status: 'LIVE' | 'DRAFT' | 'PENDING') => {
     createPromotion({
-      businessId: activeBiz.id,
-      businessName: activeBiz.name,
-      businessLogo: activeBiz.logo,
-      allianceId: activeBiz.allianceId,
-      title: formData.title,
-      shortDescription: formData.shortDescription,
-      description: formData.description,
-      categoryName: activeBiz.categoryName,
-      imageUrl: formData.imageUrl,
-      offer: formData.offer,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      cta: formData.cta,
-      destinationUrl: formData.destinationUrl,
-      shareHeadline: formData.shareHeadline,
-      shareMessage: formData.shareMessage,
-      status: 'LIVE',
+      businessId: currentUser.businessId || 'biz_hvac',
+      businessName: currentUser.businessName || 'ABC Heating & Air',
+      businessLogo: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200&auto=format&fit=crop&q=80',
+      allianceId: currentUser.allianceId || 'all_blr',
+      title: title || 'Seasonal Promotional Offer',
+      shortDescription: shortDescription || 'Exclusive promotional savings for alliance member clients.',
+      description: description || 'Special offer details.',
+      categoryName,
+      imageUrl,
+      offer: offer || 'Special Alliance Discount',
+      targetAudience,
+      location,
+      startDate,
+      endDate,
+      cta,
+      destinationUrl,
+      shareHeadline: title,
+      shareMessage: shortDescription,
+      status,
+      estimatedReach: 24500,
+      leadsCount: 0,
+      referralsCount: 0,
+      reportedSalesCount: 0,
+      estimatedRevenue: 0,
+      channelContent: {
+        emailSubject,
+        emailBody,
+        facebookPost,
+        instagramCaption,
+        linkedInPost,
+        smsMessage,
+      },
+      availableChannels: ['Email', 'Facebook', 'LinkedIn', 'SMS', 'Flyer', 'QR Code'],
     });
 
-    setStep(5); // Published success state
+    navigate('/app/promotions');
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {step < 5 && (
-        <Button variant="ghost" size="sm" onClick={() => navigate('/app/promotions')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-          Back to My Promotions
-        </Button>
-      )}
+    <div className="p-6 md:p-8 bg-[#050505] min-h-screen text-neutral-100 font-sans max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={() => navigate('/app/adshare')}
+          className="flex items-center space-x-2 text-xs font-bold text-neutral-400 hover:text-white uppercase transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Marketplace</span>
+        </button>
 
-      {/* Progress Header */}
-      {step < 5 && (
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-xs font-extrabold uppercase text-[#e50914] bg-red-950/40 border border-red-800/40 px-3 py-1.5 rounded-full">
+          <Sparkles className="w-4 h-4" />
+          <span>Multi-Step Campaign Creator</span>
+        </div>
+      </div>
+
+      <div className="bg-[#0b0b0b] border border-neutral-800 p-6 rounded-2xl mb-8 space-y-4">
+        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider">
+          <span className={currentStep >= 1 ? 'text-[#e50914]' : 'text-neutral-500'}>01 Basic Info</span>
+          <span className={currentStep >= 2 ? 'text-[#e50914]' : 'text-neutral-500'}>02 Assets</span>
+          <span className={currentStep >= 3 ? 'text-[#e50914]' : 'text-neutral-500'}>03 Channel Content</span>
+          <span className={currentStep >= 4 ? 'text-[#e50914]' : 'text-neutral-500'}>04 Preview</span>
+          <span className={currentStep >= 5 ? 'text-[#e50914]' : 'text-neutral-500'}>05 Publish</span>
+        </div>
+        <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#e50914] transition-all duration-500"
+            style={{ width: `${(currentStep / 5) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {currentStep === 1 && (
+        <div className="bg-[#0b0b0b] border border-neutral-800 p-8 rounded-2xl space-y-6">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Create AdShare Promotion</h1>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Step {step} of 4 — {['Details', 'Creative Image', 'Share Content', 'Live Card Preview'][step - 1]}
-            </p>
+            <h2 className="text-2xl font-black uppercase text-white">STEP 1: BASIC INFORMATION</h2>
+            <p className="text-xs text-neutral-400 mt-1">Define your core promotional offer and campaign constraints.</p>
           </div>
-          <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-semibold">{activeBiz.categoryName}</span>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Campaign Title *</label>
+              <input
+                type="text"
+                placeholder="e.g. Free Summer HVAC Inspection & Tune-Up"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Business Category</label>
+              <select
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Special Offer Headline *</label>
+              <input
+                type="text"
+                placeholder="e.g. 100% Free Inspection ($149 Value)"
+                value={offer}
+                onChange={(e) => setOffer(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Short Marketplace Summary</label>
+              <input
+                type="text"
+                placeholder="Brief summary visible on campaign cards..."
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Full Offer Description</label>
+              <textarea
+                rows={4}
+                placeholder="Detailed terms, what is included, who qualifies..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm p-4 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Expiration Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-6">
-          {/* STEP 1: DETAILS */}
-          {step === 1 && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">1. Campaign Details</h2>
+      {currentStep === 2 && (
+        <div className="bg-[#0b0b0b] border border-neutral-800 p-8 rounded-2xl space-y-6">
+          <div>
+            <h2 className="text-2xl font-black uppercase text-white">STEP 2: CAMPAIGN ASSETS</h2>
+            <p className="text-xs text-neutral-400 mt-1">Upload high-resolution graphics, video links, or promotional flyers.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Banner Image URL</label>
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
+              />
+            </div>
+
+            <div className="border-2 border-dashed border-neutral-800 rounded-2xl p-8 text-center hover:border-red-600/50 transition-colors bg-[#050505]">
+              <Upload className="w-10 h-10 text-neutral-500 mx-auto mb-3" />
+              <div className="text-sm font-bold text-white uppercase">Drag & drop files or click to upload assets</div>
+              <div className="text-xs text-neutral-500 mt-1">Supports PNG, JPG, WEBP, PDF, MP4 (Max 25MB)</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentStep === 3 && (
+        <div className="bg-[#0b0b0b] border border-neutral-800 p-8 rounded-2xl space-y-6">
+          <div>
+            <h2 className="text-2xl font-black uppercase text-white">STEP 3: CHANNEL CONTENT</h2>
+            <p className="text-xs text-neutral-400 mt-1">
+              Provide pre-written copy so alliance partners can instantly share your offer across channels.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2 border-b border-neutral-800 pb-3">
+            <button
+              onClick={() => setActiveCopyTab('email')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase flex items-center space-x-2 ${
+                activeCopyTab === 'email' ? 'bg-[#e50914] text-white' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email</span>
+            </button>
+            <button
+              onClick={() => setActiveCopyTab('facebook')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase flex items-center space-x-2 ${
+                activeCopyTab === 'facebook' ? 'bg-[#e50914] text-white' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Facebook</span>
+            </button>
+            <button
+              onClick={() => setActiveCopyTab('linkedin')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase flex items-center space-x-2 ${
+                activeCopyTab === 'linkedin' ? 'bg-[#e50914] text-white' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Share2 className="w-4 h-4" />
+              <span>LinkedIn</span>
+            </button>
+            <button
+              onClick={() => setActiveCopyTab('sms')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase flex items-center space-x-2 ${
+                activeCopyTab === 'sms' ? 'bg-[#e50914] text-white' : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>SMS</span>
+            </button>
+          </div>
+
+          {activeCopyTab === 'email' && (
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Campaign Title</label>
+                <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Email Subject Line</label>
                 <input
                   type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Free 2-Week AI Process Automation Audit"
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                  required
+                  placeholder="Subject line for alliance partners..."
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full bg-[#050505] border border-neutral-800 text-white text-sm px-4 py-3 rounded-xl focus:border-red-600 focus:outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Exclusive Member Offer</label>
-                <input
-                  type="text"
-                  value={formData.offer}
-                  onChange={(e) => setFormData({ ...formData, offer: e.target.value })}
-                  placeholder="e.g. 100% Free Audit ($2,500 value waived for alliance members)"
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Short Description (Card Summary)</label>
-                  <input
-                    type="text"
-                    value={formData.shortDescription}
-                    onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                    placeholder="Brief 1-liner summary..."
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Call to Action (CTA)</label>
-                  <input
-                    type="text"
-                    value={formData.cta}
-                    onChange={(e) => setFormData({ ...formData, cta: e.target.value })}
-                    placeholder="e.g. Claim Free Audit"
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">End Date / Expiry</label>
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Description</label>
+                <label className="block text-xs font-bold uppercase text-neutral-300 mb-2">Email Copy Body</label>
                 <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Provide comprehensive details about what alliance members get..."
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
+                  rows={6}
+                  placeholder="Dear customer, we partnered with [Business] to bring you..."
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="w-full bg-[#050505] border border-neutral-800 text-white text-sm p-4 rounded-xl focus:border-red-600 focus:outline-none"
                 />
-              </div>
-
-              <div className="flex justify-end pt-4 border-t border-slate-100">
-                <Button
-                  onClick={() => setStep(2)}
-                  disabled={!formData.title || !formData.offer}
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                >
-                  Next: Upload Creative
-                </Button>
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* STEP 2: CREATIVE */}
-          {step === 2 && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">2. Upload Creative Image</h2>
+      {currentStep === 4 && (
+        <div className="bg-[#0b0b0b] border border-neutral-800 p-8 rounded-2xl space-y-6">
+          <div>
+            <h2 className="text-2xl font-black uppercase text-white">STEP 4: CAMPAIGN PREVIEW</h2>
+            <p className="text-xs text-neutral-400 mt-1">Review your campaign card as it will appear in the Marketplace.</p>
+          </div>
 
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <img src={formData.imageUrl} alt="Creative Preview" className="w-16 h-16 rounded-xl object-cover border border-slate-300 shrink-0" />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Upload Custom Image</h4>
-                    <p className="text-[11px] text-slate-500">1200 x 630 px recommended</p>
-                  </div>
-                </div>
-                <label className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors flex items-center gap-1.5">
-                  <Upload className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Choose File</span>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Or Image URL</label>
-                <input
-                  type="text"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">Preset Images</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {presetImages.map((imgUrl, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setFormData({ ...formData, imageUrl: imgUrl })}
-                      className={`relative h-24 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
-                        formData.imageUrl === imgUrl ? 'border-blue-600 ring-2 ring-blue-500/30' : 'border-slate-200 hover:border-slate-400'
-                      }`}
-                    >
-                      <img src={imgUrl} alt="Preset" className="w-full h-full object-cover" />
-                      {formData.imageUrl === imgUrl && (
-                        <div className="absolute top-1.5 right-1.5 bg-blue-600 text-white p-1 rounded-full">
-                          <Check className="w-3 h-3" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                <Button variant="ghost" onClick={() => setStep(1)} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                  Back
-                </Button>
-                <Button onClick={() => setStep(3)} rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Next: Share Content
-                </Button>
-              </div>
+          <div className="bg-[#050505] border border-neutral-800 p-6 rounded-2xl max-w-md mx-auto space-y-4">
+            <div className="h-44 bg-neutral-900 rounded-xl overflow-hidden">
+              <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
             </div>
-          )}
-
-          {/* STEP 3: SHARE CONTENT */}
-          {step === 3 && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">3. Social Share Content</h2>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Share Headline</label>
-                <input
-                  type="text"
-                  value={formData.shareHeadline}
-                  onChange={(e) => setFormData({ ...formData, shareHeadline: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Share Message</label>
-                <textarea
-                  rows={3}
-                  value={formData.shareMessage}
-                  onChange={(e) => setFormData({ ...formData, shareMessage: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Destination URL</label>
-                <input
-                  type="text"
-                  value={formData.destinationUrl}
-                  onChange={(e) => setFormData({ ...formData, destinationUrl: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 font-mono"
-                />
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                <Button variant="ghost" onClick={() => setStep(2)} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                  Back
-                </Button>
-                <Button onClick={() => setStep(4)} rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Next: Live Card Preview
-                </Button>
-              </div>
+            <div>
+              <span className="text-[10px] bg-red-950 text-red-400 border border-red-800 px-2 py-0.5 rounded uppercase font-bold">
+                {categoryName}
+              </span>
+              <h3 className="text-lg font-bold text-white uppercase mt-2">{title || 'Campaign Title'}</h3>
+              <p className="text-xs text-neutral-400 mt-1">{shortDescription || 'Short description summary...'}</p>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* STEP 4: PREVIEW */}
-          {step === 4 && (
-            <div className="space-y-6 animate-in fade-in duration-150">
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">4. Campaign Card Preview</h2>
+      {currentStep === 5 && (
+        <div className="bg-[#0b0b0b] border border-neutral-800 p-8 rounded-2xl text-center space-y-6 max-w-xl mx-auto">
+          <div className="w-16 h-16 rounded-full bg-red-950 border border-red-600 flex items-center justify-center mx-auto text-[#e50914]">
+            <Send className="w-8 h-8" />
+          </div>
 
-              <div className="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
-                <div className="relative h-48 w-full bg-slate-100">
-                  <img src={formData.imageUrl} alt={formData.title} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 left-3">
-                    <Badge variant="purple">{activeBiz.categoryName}</Badge>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <img src={activeBiz.logo} alt={activeBiz.name} className="w-6 h-6 rounded-full object-cover" />
-                    <span className="text-xs font-bold text-slate-900">{activeBiz.name}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-slate-900">{formData.title}</h3>
-                  <p className="text-xs text-slate-600 mt-1">{formData.shortDescription}</p>
+          <div>
+            <h2 className="text-2xl font-black uppercase text-white">READY TO PUBLISH</h2>
+            <p className="text-xs text-neutral-400 mt-1">
+              Choose how you want to deploy <strong>{title || 'your campaign'}</strong>.
+            </p>
+          </div>
 
-                  <div className="mt-4 p-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-lg text-xs font-semibold flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>{formData.offer}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-3 gap-4 text-left">
+            <button
+              onClick={() => handleSubmit('DRAFT')}
+              className="bg-[#050505] border border-neutral-800 hover:border-neutral-700 p-4 rounded-xl space-y-2 text-center"
+            >
+              <Save className="w-6 h-6 text-neutral-400 mx-auto" />
+              <div className="text-xs font-bold text-white uppercase">Save Draft</div>
+            </button>
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                <Button variant="ghost" onClick={() => setStep(3)} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                  Back
-                </Button>
-                <Button onClick={handlePublish} variant="success">
-                  Publish to AdShare Marketplace
-                </Button>
-              </div>
-            </div>
-          )}
+            <button
+              onClick={() => handleSubmit('PENDING')}
+              className="bg-[#050505] border border-neutral-800 hover:border-neutral-700 p-4 rounded-xl space-y-2 text-center"
+            >
+              <Clock className="w-6 h-6 text-amber-500 mx-auto" />
+              <div className="text-xs font-bold text-white uppercase">Schedule</div>
+            </button>
 
-          {/* STEP 5: PUBLISHED CONFIRMATION */}
-          {step === 5 && (
-            <div className="text-center py-6 space-y-4 animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto border border-emerald-300 shadow-inner">
-                <Check className="w-8 h-8 stroke-[3]" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900">Your promotion is live! 🎉</h2>
-              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                Alliance members can now discover and promote your offer across the private business alliance network.
-              </p>
+            <button
+              onClick={() => handleSubmit('LIVE')}
+              className="bg-red-950 border border-red-600/60 p-4 rounded-xl space-y-2 text-center"
+            >
+              <Send className="w-6 h-6 text-[#e50914] mx-auto" />
+              <div className="text-xs font-bold text-white uppercase">Publish Live</div>
+            </button>
+          </div>
+        </div>
+      )}
 
-              <div className="pt-4 flex justify-center gap-3">
-                <Button onClick={() => navigate('/app/adshare')} variant="primary" size="lg">
-                  View in Marketplace
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between mt-8">
+        <button
+          disabled={currentStep === 1}
+          onClick={handlePrev}
+          className={`px-6 py-3 rounded-xl text-xs font-bold uppercase ${
+            currentStep === 1 ? 'opacity-30 cursor-not-allowed bg-neutral-900 text-neutral-600' : 'bg-neutral-900 text-white hover:bg-neutral-800'
+          }`}
+        >
+          Previous Step
+        </button>
+
+        {currentStep < 5 && (
+          <button
+            onClick={handleNext}
+            className="adshare-red-btn px-8 py-3 rounded-xl text-xs font-black flex items-center space-x-2"
+          >
+            <span>Next Step</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
     </div>
   );
 };

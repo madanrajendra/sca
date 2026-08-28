@@ -1,272 +1,253 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
-import { Card } from '../../components/common/Card';
-import { Button } from '../../components/common/Button';
-import { Modal } from '../../components/common/Modal';
-import type { Business } from '../../types';
-import { Search, MapPin, Grid, Phone, Globe, Tag, ExternalLink, Sparkles, Mail, Building2 } from 'lucide-react';
+import { Business } from '../../types';
+import { getOwnerAvatar } from '../../utils/avatars';
+import {
+  BookOpen,
+  Search,
+  Building2,
+  Users,
+  Globe,
+  Phone,
+  ShieldCheck,
+  Megaphone,
+  Handshake,
+  X,
+  ExternalLink,
+  Mail
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+
+const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
+
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
 
 export const BusinessDirectory: React.FC = () => {
   const { businesses, promotions } = useSCAData();
+  const [search, setSearch] = useState('');
+  const [selectedBiz, setSelectedBiz] = useState<Business | null>(null);
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [selectedServiceArea, setSelectedServiceArea] = useState('ALL');
-  const [selectedBiz, setSelectedBiz] = useState<Business | null>(null);
-
-  // Active alliance members only
   const activeMembers = businesses.filter((b) => b.membershipStatus === 'ACTIVE');
 
-  const filteredMembers = activeMembers.filter((b) => {
-    if (selectedCategory !== 'ALL' && b.categoryName !== selectedCategory) return false;
-    if (selectedServiceArea !== 'ALL' && b.serviceArea !== selectedServiceArea) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        b.name.toLowerCase().includes(q) ||
-        b.ownerName.toLowerCase().includes(q) ||
-        b.categoryName.toLowerCase().includes(q) ||
-        b.description.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
-
-  const categoryOptions = Array.from(new Set(activeMembers.map((b) => b.categoryName)));
-  const serviceAreaOptions = Array.from(new Set(activeMembers.map((b) => b.serviceArea)));
-
-  // Get active promotions for a business
-  const getBizPromotions = (bizId: string) => {
-    return promotions.filter((p) => p.businessId === bizId && p.status === 'LIVE');
-  };
+  const filteredMembers = activeMembers.filter(
+    (b) =>
+      b.name.toLowerCase().includes(search.toLowerCase()) ||
+      b.categoryName.toLowerCase().includes(search.toLowerCase()) ||
+      b.description.toLowerCase().includes(search.toLowerCase()) ||
+      b.ownerName.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-800">
-            Alliance Network Directory
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">Business Directory</h1>
-          <p className="text-xs text-slate-300 max-w-xl mt-1 leading-relaxed">
-            Connect with verified, category-exclusive business leaders in your alliance.
+    <div className="p-6 md:p-8 bg-[#050505] min-h-screen text-neutral-100 font-sans space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-red-600/20 pb-6">
+        <div>
+          <div className="flex items-center space-x-2 text-[#e50914] text-xs font-black uppercase tracking-wider mb-1">
+            <BookOpen className="w-4 h-4" />
+            <span>Trusted Business Network</span>
+          </div>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">ALLIANCE DIRECTORY</h1>
+          <p className="text-sm text-neutral-400 mt-1">
+            Discover trusted peer businesses in the Spin City Alliance. Collaborate, co-market, and send warm referrals.
           </p>
         </div>
-      </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search businesses..."
-              className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white"
-            />
-          </div>
-
-          {/* Service Area Filter */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-semibold text-slate-500">Service Area:</span>
-            <select
-              value={selectedServiceArea}
-              onChange={(e) => setSelectedServiceArea(e.target.value)}
-              className="px-3 py-2 text-xs border border-slate-200 rounded-xl bg-slate-50 font-semibold text-slate-800 focus:ring-2 focus:ring-slate-900"
-            >
-              <option value="ALL">All Service Areas</option>
-              {serviceAreaOptions.map((area) => (
-                <option key={area} value={area}>{area}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1">
-          <button
-            onClick={() => setSelectedCategory('ALL')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 cursor-pointer transition-all ${
-              selectedCategory === 'ALL'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            All Categories
-          </button>
-          {categoryOptions.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 cursor-pointer transition-all ${
-                selectedCategory === cat
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search owners or businesses..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[#0b0b0b] border border-neutral-800 text-white text-xs pl-9 pr-4 py-2.5 rounded-xl focus:border-red-600 focus:outline-none"
+          />
         </div>
       </div>
 
-      {/* Member Business Grid */}
-      {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMembers.map((biz) => {
-            const bizPromos = getBizPromotions(biz.id);
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredMembers.map((biz) => {
+          const activeCampaigns = promotions.filter((p) => p.businessId === biz.id && p.status === 'LIVE');
 
-            return (
-              <Card key={biz.id} hover className="flex flex-col justify-between p-5 space-y-4">
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <img src={biz.logo} alt={biz.name} className="w-12 h-12 rounded-xl object-cover border border-slate-200" />
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm">{biz.name}</h3>
-                        <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Grid className="w-3.5 h-3.5 text-blue-600" /> {biz.categoryName}
-                        </p>
-                      </div>
-                    </div>
+          return (
+            <div
+              key={biz.id}
+              className="bg-[#0b0b0b] border border-neutral-800 rounded-2xl overflow-hidden hover:border-[#e50914]/50 transition-all card-hover flex flex-col justify-between"
+            >
+              {/* Top Portion: Big Owner Portrait */}
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#050505] border-b border-neutral-900">
+                <img
+                  src={getOwnerAvatar(biz.id)}
+                  alt={biz.ownerName}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+
+              {/* Accent Bar */}
+              <div className="h-1 bg-[#e50914] w-full" />
+
+              {/* Text Area */}
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-black text-white uppercase tracking-tight leading-none">{biz.ownerName}</h3>
+                    <span className="text-[8px] bg-[#e50914]/10 text-[#e50914] border border-[#e50914]/20 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                      {biz.categoryName}
+                    </span>
+                  </div>
+                  
+                  {/* Business detail subtitle */}
+                  <div className="text-xs text-red-500 font-bold uppercase tracking-tight flex items-center space-x-1.5 mt-1.5">
+                    <img src={biz.logo} alt={biz.name} className="w-3.5 h-3.5 rounded object-cover border border-neutral-800" />
+                    <span>{biz.name}</span>
                   </div>
 
-                  <p className="text-xs text-slate-600 mt-3 line-clamp-3 leading-relaxed">{biz.description}</p>
-
-                  {/* Current Offer Pill */}
-                  {biz.currentOffer ? (
-                    <div className="mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-xs font-medium flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="truncate">{biz.currentOffer}</span>
-                    </div>
-                  ) : (
-                    <div className="mt-3 p-2 text-slate-400 text-xs italic">No current offers</div>
-                  )}
+                  <p className="text-xs text-neutral-400 leading-relaxed line-clamp-3 pt-1">
+                    {biz.description}
+                  </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">Owner: {biz.ownerName}</span>
-                  <Button size="sm" variant="outline" onClick={() => setSelectedBiz(biz)}>
-                    View Profile
-                  </Button>
+                {/* Bottom Row: Square Contact Buttons */}
+                <div className="flex items-center space-x-2 pt-2">
+                  <a
+                    href={`mailto:${biz.ownerEmail}`}
+                    className="w-8 h-8 rounded bg-[#e50914]/10 hover:bg-[#e50914]/20 border border-[#e50914]/30 text-white flex items-center justify-center transition-colors"
+                    title="Send Email"
+                  >
+                    <Mail className="w-4 h-4 text-red-500" />
+                  </a>
+                  <a
+                    href={`tel:${biz.phone}`}
+                    className="w-8 h-8 rounded bg-[#e50914]/10 hover:bg-[#e50914]/20 border border-[#e50914]/30 text-white flex items-center justify-center transition-colors"
+                    title="Call Phone"
+                  >
+                    <Phone className="w-4 h-4 text-red-500" />
+                  </a>
+                  <a
+                    href={biz.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-8 h-8 rounded bg-[#e50914]/10 hover:bg-[#e50914]/20 border border-[#e50914]/30 text-white flex items-center justify-center transition-colors"
+                    title="View Website"
+                  >
+                    <Globe className="w-4 h-4 text-red-500" />
+                  </a>
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-8 h-8 rounded bg-[#e50914]/10 hover:bg-[#e50914]/20 border border-[#e50914]/30 text-white flex items-center justify-center transition-colors"
+                    title="LinkedIn Profile"
+                  >
+                    <LinkedinIcon className="w-4 h-4 text-red-500" />
+                  </a>
+                  <a
+                    href="https://facebook.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-8 h-8 rounded bg-[#e50914]/10 hover:bg-[#e50914]/20 border border-[#e50914]/30 text-white flex items-center justify-center transition-colors"
+                    title="Facebook Page"
+                  >
+                    <FacebookIcon className="w-4 h-4 text-red-500" />
+                  </a>
                 </div>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        /* Empty Directory State */
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center my-6">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-            <Building2 className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900">No businesses found.</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-            Try adjusting your category or service area search filters.
-          </p>
-          <Button onClick={() => { setSearch(''); setSelectedCategory('ALL'); setSelectedServiceArea('ALL'); }} variant="outline">
-            Reset Search Filters
-          </Button>
-        </div>
-      )}
 
-      {/* BUSINESS PROFILE MODAL */}
+                {/* Main Action Buttons */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-900">
+                  <button
+                    onClick={() => setSelectedBiz(biz)}
+                    className="py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-bold rounded-xl text-[10px] uppercase transition-colors"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => navigate(`/app/feed/${biz.id}`)}
+                    className="py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-[10px] uppercase transition-colors"
+                  >
+                    Feed
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {selectedBiz && (
-        <Modal
-          isOpen={!!selectedBiz}
-          onClose={() => setSelectedBiz(null)}
-          title={selectedBiz.name}
-          subtitle={`Category Leader: ${selectedBiz.categoryName}`}
-          maxWidth="lg"
-        >
-          <div className="space-y-5">
-            {/* Header Banner */}
-            <div className="flex items-center gap-4 p-4 bg-slate-900 text-white rounded-xl">
-              <img src={selectedBiz.logo} alt={selectedBiz.name} className="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0" />
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0b0b0b] border border-red-600/40 rounded-2xl max-w-xl w-full p-6 space-y-6 relative text-neutral-100">
+            <button
+              onClick={() => setSelectedBiz(null)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center space-x-4">
+              <img src={getOwnerAvatar(selectedBiz.id)} alt={selectedBiz.ownerName} className="w-20 h-20 rounded-full object-cover border-2 border-red-600/40 shrink-0" />
               <div>
-                <h3 className="text-base font-bold text-white">{selectedBiz.name}</h3>
-                <p className="text-xs text-blue-400 font-semibold">{selectedBiz.categoryName} • {selectedBiz.allianceName}</p>
-                <p className="text-xs text-slate-300 mt-1">Owner: {selectedBiz.ownerName} ({selectedBiz.ownerEmail})</p>
+                <span className="text-[9px] bg-[#e50914]/10 text-[#e50914] border border-[#e50914]/20 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                  {selectedBiz.categoryName}
+                </span>
+                <h2 className="text-xl font-black uppercase text-white mt-1.5 leading-none">{selectedBiz.ownerName}</h2>
+                <div className="flex items-center space-x-2 mt-2">
+                  <img src={selectedBiz.logo} alt={selectedBiz.name} className="w-5 h-5 rounded object-cover border border-neutral-700" />
+                  <span className="text-xs text-neutral-300 font-semibold">{selectedBiz.name}</span>
+                </div>
               </div>
             </div>
 
-            {/* Contact & Web Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-blue-600 shrink-0" />
-                <a href={selectedBiz.website} target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline truncate">
-                  {selectedBiz.website}
+            <p className="text-xs text-neutral-300 leading-relaxed">{selectedBiz.description}</p>
+
+            <div className="bg-[#050505] p-4 rounded-xl border border-neutral-900 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400">Website:</span>
+                <a href={selectedBiz.website} target="_blank" rel="noreferrer" className="text-red-400 font-bold hover:underline flex items-center space-x-1">
+                  <span>{selectedBiz.website}</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-semibold">{selectedBiz.phone}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400">Phone:</span>
+                <span className="font-mono text-white">{selectedBiz.phone}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400">Service Area:</span>
+                <span className="text-white font-bold">{selectedBiz.serviceArea}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center gap-2 text-slate-700">
-              <MapPin className="w-4 h-4 text-purple-600 shrink-0" />
-              <span>Service Area: <strong>{selectedBiz.serviceArea}</strong></span>
-            </div>
-
-            {/* Description */}
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">About Business</h4>
-              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                {selectedBiz.description}
-              </p>
-            </div>
-
-            {/* Current Offer */}
-            {selectedBiz.currentOffer && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-900 text-xs font-semibold">
-                <Tag className="w-5 h-5 text-emerald-600 shrink-0" />
-                <div>
-                  <span className="font-bold text-slate-900 block text-[11px]">Current Alliance Offer:</span>
-                  <span>{selectedBiz.currentOffer}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-              <Button
-                variant="outline"
-                onClick={() => window.open(`mailto:${selectedBiz.ownerEmail}`)}
-                leftIcon={<Mail className="w-4 h-4" />}
-              >
-                Contact Owner
-              </Button>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setSelectedBiz(null);
-                    navigate('/app/adshare');
-                  }}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
-                >
-                  View Promotions
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => window.open(selectedBiz.website, '_blank')}
-                  leftIcon={<ExternalLink className="w-4 h-4" />}
-                >
-                  Visit Website
-                </Button>
-              </div>
+            <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-xl flex items-center space-x-2 text-xs text-emerald-400 font-semibold uppercase">
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span>Customer Data Privacy Boundary Active. Member client lists are strictly confidential.</span>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );

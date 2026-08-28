@@ -364,7 +364,12 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
       promoterUserId,
       trackingCode,
       fullTrackingUrl: `https://${trackingCode}`,
+      channels: ['Email', 'Facebook'],
+      estimatedReach: promo ? promo.estimatedReach : 15000,
       clicks: 0,
+      leads: 0,
+      referrals: 0,
+      sales: 0,
       results: 0,
       datePromoted: new Date().toISOString().substring(0, 10),
     };

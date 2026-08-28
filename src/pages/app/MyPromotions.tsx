@@ -1,157 +1,67 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
-import type { AdSharePromotion, PromotionStatus } from '../../types';
-import { Card } from '../../components/common/Card';
-import { Button } from '../../components/common/Button';
-import { Table, type Column } from '../../components/common/Table';
-import { Modal } from '../../components/common/Modal';
-import { Badge } from '../../components/common/Badge';
+import { useAuth } from '../../context/AuthContext';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from 'recharts';
-import {
-  Sparkles,
+  Share2,
   Plus,
-  BarChart3,
   Eye,
-  Edit,
-  Pause,
-  Copy,
-  Users,
   MousePointerClick,
-  CheckCircle2,
+  Users,
+  Flame,
+  Pause,
+  Play,
   TrendingUp,
+  Award,
+  DollarSign,
+  MoreVertical
 } from 'lucide-react';
 
 export const MyPromotions: React.FC = () => {
+  const { promotions, togglePausePromotion } = useSCAData();
   const { currentUser } = useAuth();
-  const { promotions, businesses, togglePausePromotion } = useSCAData();
-  const navigate = useNavigate();
 
-  const activeBiz = businesses.find((b) => b.id === currentUser.businessId) || businesses[0];
+  const [activeTab, setActiveTab] = useState<'ALL' | 'LIVE' | 'DRAFT' | 'PAUSED'>('ALL');
 
-  const [activeTab, setActiveTab] = useState<string>('ALL');
-  const [selectedPromoAnalytics, setSelectedPromoAnalytics] = useState<AdSharePromotion | null>(null);
+  const myCampaigns = promotions.filter(
+    (p) => p.businessId === (currentUser.businessId || 'biz_hvac')
+  );
 
-  const myPromotionsList = promotions.filter((p) => p.businessId === activeBiz.id);
-
-  const filteredPromotions = myPromotionsList.filter((p) => {
+  const filteredCampaigns = myCampaigns.filter((p) => {
     if (activeTab === 'ALL') return true;
     return p.status === activeTab;
   });
 
-  // Mock performance over time chart data
-  const chartData = [
-    { date: 'Aug 10', clicks: 12, results: 2 },
-    { date: 'Aug 11', clicks: 24, results: 4 },
-    { date: 'Aug 12', clicks: 18, results: 3 },
-    { date: 'Aug 13', clicks: 36, results: 8 },
-    { date: 'Aug 14', clicks: 45, results: 9 },
-    { date: 'Aug 15', clicks: 52, results: 12 },
-    { date: 'Aug 16', clicks: 68, results: 15 },
-  ];
-
-  const columns: Column<AdSharePromotion>[] = [
-    {
-      header: 'Promotion Title',
-      accessor: (row) => (
-        <div className="flex items-center gap-3">
-          <img src={row.imageUrl} alt={row.title} className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0" />
-          <div>
-            <p className="font-bold text-slate-900 text-xs line-clamp-1">{row.title}</p>
-            <p className="text-[10px] text-slate-500">{row.categoryName}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: 'Status',
-      accessor: (row) => <Badge status={row.status} size="sm" />,
-    },
-    {
-      header: 'Views',
-      accessor: (row) => <span className="font-mono text-xs font-semibold text-slate-700">{row.views.toLocaleString()}</span>,
-    },
-    {
-      header: 'Clicks',
-      accessor: (row) => <span className="font-mono text-xs font-bold text-blue-600">{row.clicks.toLocaleString()}</span>,
-    },
-    {
-      header: 'Results',
-      accessor: (row) => <span className="font-mono text-xs font-bold text-emerald-600">{row.resultsCount.toLocaleString()}</span>,
-    },
-    {
-      header: 'Members Promoting',
-      accessor: (row) => (
-        <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-          {row.membersPromotingCount} members
-        </span>
-      ),
-    },
-    {
-      header: 'Expiry',
-      accessor: (row) => <span className="text-xs text-slate-500 font-mono">{row.endDate}</span>,
-    },
-    {
-      header: 'Actions',
-      accessor: (row) => (
-        <div className="flex items-center gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setSelectedPromoAnalytics(row)}
-            title="View Analytics"
-          >
-            <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => togglePausePromotion(row.id)}
-            title={row.status === 'PAUSED' ? 'Resume' : 'Pause'}
-          >
-            <Pause className="w-3.5 h-3.5 text-amber-600" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="p-6 md:p-8 bg-[#050505] min-h-screen text-neutral-100 font-sans space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-red-600/20 pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">My AdShare Promotions</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage your alliance co-marketing campaigns and review performance metrics.
+          <div className="flex items-center space-x-2 text-[#e50914] text-xs font-black uppercase tracking-wider mb-1">
+            <Share2 className="w-4 h-4" />
+            <span>Campaign Management</span>
+          </div>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">MY CAMPAIGNS</h1>
+          <p className="text-sm text-neutral-400 mt-1">
+            Track performance and manage promotions published into the alliance marketplace.
           </p>
         </div>
 
-        <Button onClick={() => navigate('/app/promotions/create')} leftIcon={<Plus className="w-4 h-4" />}>
-          + Create Promotion
-        </Button>
+        <Link
+          to="/app/promotions/create"
+          className="adshare-red-btn px-5 py-3 rounded-xl text-xs font-black flex items-center space-x-2 shadow-lg shadow-red-600/30"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Create New Campaign</span>
+        </Link>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-        {['ALL', 'LIVE', 'DRAFT', 'PENDING', 'PAUSED', 'EXPIRED'].map((tab) => (
+      <div className="flex items-center space-x-2 border-b border-neutral-900 pb-3">
+        {(['ALL', 'LIVE', 'DRAFT', 'PAUSED'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-xl shrink-0 cursor-pointer transition-all ${
-              activeTab === tab
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${
+              activeTab === tab ? 'bg-[#e50914] text-white' : 'bg-[#0b0b0b] text-neutral-400 hover:text-white border border-neutral-800'
             }`}
           >
             {tab}
@@ -159,78 +69,81 @@ export const MyPromotions: React.FC = () => {
         ))}
       </div>
 
-      {/* Promotions Table */}
-      {filteredPromotions.length > 0 ? (
-        <Card>
-          <Table data={filteredPromotions} columns={columns} keyExtractor={(p) => p.id} />
-        </Card>
-      ) : (
-        /* Empty State */
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center my-6">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-            <Sparkles className="w-8 h-8" />
+      <div className="space-y-4">
+        {filteredCampaigns.length === 0 ? (
+          <div className="bg-[#0b0b0b] border border-neutral-800 p-12 rounded-2xl text-center space-y-4">
+            <Share2 className="w-12 h-12 text-neutral-600 mx-auto" />
+            <h3 className="text-xl font-bold uppercase text-white">No campaigns in this view</h3>
+            <p className="text-xs text-neutral-400">Click "Create New Campaign" to launch a campaign into the alliance.</p>
           </div>
-          <h3 className="text-base font-bold text-slate-900">You haven't created any promotions yet.</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-6">
-            Publish your first offer to let alliance category partners promote your business.
-          </p>
-          <Button onClick={() => navigate('/app/promotions/create')} leftIcon={<Plus className="w-4 h-4" />}>
-            Create Promotion
-          </Button>
-        </div>
-      )}
+        ) : (
+          filteredCampaigns.map((promo) => (
+            <div key={promo.id} className="bg-[#0b0b0b] border border-neutral-800 p-6 rounded-2xl space-y-4 hover:border-red-600/40 transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <img src={promo.imageUrl} alt={promo.title} className="w-16 h-16 rounded-xl object-cover border border-neutral-800" />
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded uppercase ${
+                        promo.status === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
+                      }`}>
+                        {promo.status}
+                      </span>
+                      <span className="text-[10px] text-neutral-500 font-mono">Created {promo.createdAt}</span>
+                    </div>
+                    <h3 className="text-lg font-black uppercase text-white mt-1">{promo.title}</h3>
+                    <p className="text-xs text-neutral-400 line-clamp-1">{promo.offer}</p>
+                  </div>
+                </div>
 
-      {/* PROMOTION ANALYTICS MODAL */}
-      {selectedPromoAnalytics && (
-        <Modal
-          isOpen={!!selectedPromoAnalytics}
-          onClose={() => setSelectedPromoAnalytics(null)}
-          title={`Analytics: ${selectedPromoAnalytics.title}`}
-          subtitle="Privacy-safe aggregate campaign performance"
-          maxWidth="xl"
-        >
-          <div className="space-y-6">
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Total Views</span>
-                <p className="text-xl font-bold text-slate-900 mt-0.5">{selectedPromoAnalytics.views.toLocaleString()}</p>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => togglePausePromotion(promo.id)}
+                    className="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 text-xs font-bold uppercase flex items-center space-x-1"
+                  >
+                    {promo.status === 'PAUSED' ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
+                    <span>{promo.status === 'PAUSED' ? 'Resume' : 'Pause'}</span>
+                  </button>
+
+                  <Link
+                    to="/app/analytics"
+                    className="adshare-red-btn px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase"
+                  >
+                    View Analytics
+                  </Link>
+                </div>
               </div>
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                <span className="text-[10px] font-bold text-blue-700 uppercase">Total Clicks</span>
-                <p className="text-xl font-bold text-blue-900 mt-0.5">{selectedPromoAnalytics.clicks.toLocaleString()}</p>
-              </div>
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <span className="text-[10px] font-bold text-emerald-700 uppercase">Total Results</span>
-                <p className="text-xl font-bold text-emerald-900 mt-0.5">{selectedPromoAnalytics.resultsCount.toLocaleString()}</p>
-              </div>
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl">
-                <span className="text-[10px] font-bold text-purple-700 uppercase">Members Promoting</span>
-                <p className="text-xl font-bold text-purple-900 mt-0.5">{selectedPromoAnalytics.membersPromotingCount}</p>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3 bg-[#050505] p-3 rounded-xl border border-neutral-900 text-xs">
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Promoters</div>
+                  <div className="font-extrabold text-[#e50914]">{promo.membersPromotingCount} Members</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Est. Reach</div>
+                  <div className="font-extrabold text-white">{(promo.estimatedReach || 0).toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Clicks</div>
+                  <div className="font-extrabold text-emerald-400">{promo.clicks}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Leads</div>
+                  <div className="font-extrabold text-white">{promo.leadsCount}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Sales Reported</div>
+                  <div className="font-extrabold text-amber-400">{promo.reportedSalesCount}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-neutral-500 uppercase font-semibold">Est. Revenue</div>
+                  <div className="font-extrabold text-white">${(promo.estimatedRevenue || 0).toLocaleString()}</div>
+                </div>
               </div>
             </div>
-
-            {/* Performance Over Time Chart */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-blue-600" /> Performance Over Time
-              </h4>
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748B' }} />
-                    <YAxis tick={{ fontSize: 10, fill: '#64748B' }} />
-                    <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                    <Line type="monotone" dataKey="clicks" stroke="#2563EB" strokeWidth={2.5} name="Clicks" />
-                    <Line type="monotone" dataKey="results" stroke="#059669" strokeWidth={2.5} name="Results" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 };

@@ -54,7 +54,6 @@ export interface Category {
   name: string;
   description: string;
   iconName: string;
-  // Alliance ID mapped to category status
   allianceMap: Record<string, CategoryStatus>;
 }
 
@@ -91,9 +90,30 @@ export interface Business {
   profileCompletionPercentage?: number;
   firstName?: string;
   lastName?: string;
+  estimatedAudience?: number;
 }
 
 export type PromotionStatus = 'DRAFT' | 'PENDING' | 'LIVE' | 'REJECTED' | 'EXPIRED' | 'PAUSED';
+
+export interface CampaignAsset {
+  id: string;
+  campaignId: string;
+  fileName: string;
+  fileType: 'IMAGE' | 'VIDEO' | 'PDF' | 'DOCUMENT';
+  fileSize: string;
+  storageUrl: string;
+}
+
+export interface CampaignChannelContent {
+  emailSubject?: string;
+  emailBody?: string;
+  facebookPost?: string;
+  instagramCaption?: string;
+  linkedInPost?: string;
+  smsMessage?: string;
+  flyerCopy?: string;
+  landingPageHeadline?: string;
+}
 
 export interface AdSharePromotion {
   id: string;
@@ -107,6 +127,8 @@ export interface AdSharePromotion {
   categoryName: string;
   imageUrl: string;
   offer: string;
+  targetAudience?: string;
+  location?: string;
   startDate: string;
   endDate: string;
   cta: string;
@@ -114,12 +136,21 @@ export interface AdSharePromotion {
   shareHeadline: string;
   shareMessage: string;
   status: PromotionStatus;
+  assets?: CampaignAsset[];
+  channelContent?: CampaignChannelContent;
+  availableChannels?: string[];
+  estimatedReach: number;
   views: number;
   clicks: number;
   shares: number;
-  resultsCount: number;
+  leadsCount: number;
+  referralsCount: number;
+  reportedSalesCount: number;
+  estimatedRevenue: number;
   membersPromotingCount: number;
+  resultsCount?: number;
   createdAt: string;
+  recommended?: boolean;
 }
 
 export interface PromotedOffer {
@@ -133,12 +164,18 @@ export interface PromotedOffer {
   promoterUserId: string;
   trackingCode: string;
   fullTrackingUrl: string;
+  channels: string[];
+  estimatedReach: number;
   clicks: number;
+  leads: number;
+  referrals: number;
+  sales: number;
   results: number;
   datePromoted: string;
+  status?: 'ACTIVE' | 'PAUSED' | 'ARCHIVED';
 }
 
-export type ReferralStatus = 'SENT' | 'IN_REVIEW' | 'CONTACTED' | 'WON' | 'LOST';
+export type ReferralStatus = 'SENT' | 'IN_REVIEW' | 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'WON' | 'LOST';
 
 export interface Referral {
   id: string;
@@ -193,5 +230,14 @@ export interface NotificationItem {
   timestamp: string;
   read: boolean;
   link: string;
-  type: 'APPLICATION' | 'PAYMENT' | 'PROMOTION' | 'REFERRAL' | 'MEMBERSHIP';
+  type: 'APPLICATION' | 'PAYMENT' | 'PROMOTION' | 'REFERRAL' | 'MEMBERSHIP' | 'EVENT';
+}
+
+export interface MarketingCalendarEvent {
+  id: string;
+  title: string;
+  date: string;
+  type: 'CAMPAIGN_START' | 'CAMPAIGN_END' | 'SEASONAL' | 'COMMUNITY_EVENT';
+  businessName: string;
+  description: string;
 }
