@@ -91,6 +91,9 @@ export interface Business {
   firstName?: string;
   lastName?: string;
   estimatedAudience?: number;
+  instagramFollowers?: number;
+  facebookFollowers?: number;
+  miscellaneousFollowers?: number;
 }
 
 export type PromotionStatus = 'DRAFT' | 'PENDING' | 'LIVE' | 'REJECTED' | 'EXPIRED' | 'PAUSED';

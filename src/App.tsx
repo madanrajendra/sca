@@ -26,8 +26,12 @@ import { BusinessFeed } from './pages/app/BusinessFeed';
 import { CreateFeedPost } from './pages/app/CreateFeedPost';
 import { PromoteAlliance } from './pages/app/PromoteAlliance';
 
+import { useAuth } from './context/AuthContext';
+
 // Admin Pages
 import { NationalAdminDashboard } from './pages/admin/NationalAdminDashboard';
+import { NationalDirectoryPage } from './pages/admin/NationalDirectoryPage';
+import { AllianceAdminDashboard } from './pages/alliance/AllianceAdminDashboard';
 import { BusinessesAdmin } from './pages/admin/BusinessesAdmin';
 import { CategoriesAdmin } from './pages/admin/CategoriesAdmin';
 import { ActivityAuditLog } from './pages/admin/ActivityAuditLog';
@@ -36,6 +40,14 @@ import { PaymentsAdmin } from './pages/admin/PaymentsAdmin';
 // Common Utility Pages
 import { NotificationsPage } from './pages/common/NotificationsPage';
 import { SettingsPage } from './pages/common/SettingsPage';
+
+const AdminDashboardView: React.FC = () => {
+  const { currentUser } = useAuth();
+  if (currentUser.role === 'ALLIANCE_ADMIN') {
+    return <AllianceAdminDashboard />;
+  }
+  return <NationalAdminDashboard />;
+};
 
 export function App() {
   return (
@@ -195,10 +207,27 @@ export function App() {
               path="/admin"
               element={
                 <AppLayout>
-                  <NationalAdminDashboard />
+                  <NationalDirectoryPage />
                 </AppLayout>
               }
             />
+            <Route
+              path="/admin/directory"
+              element={
+                <AppLayout>
+                  <NationalDirectoryPage />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AppLayout>
+                  <AdminDashboardView />
+                </AppLayout>
+              }
+            />
+            <Route path="/alliance" element={<Navigate to="/app/directory" replace />} />
             <Route
               path="/admin/promotions"
               element={

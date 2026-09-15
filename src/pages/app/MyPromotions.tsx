@@ -18,14 +18,20 @@ import {
 } from 'lucide-react';
 
 export const MyPromotions: React.FC = () => {
-  const { promotions, togglePausePromotion } = useSCAData();
+  const { promotions, businesses, togglePausePromotion } = useSCAData();
   const { currentUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'LIVE' | 'DRAFT' | 'PAUSED'>('ALL');
 
-  const myCampaigns = promotions.filter(
-    (p) => p.businessId === (currentUser.businessId || 'biz_hvac')
-  );
+  const userAllianceId = currentUser.allianceId || 'all_blr';
+  const allianceBizIds = businesses.filter((b) => b.allianceId === userAllianceId).map((b) => b.id);
+
+  const myCampaigns = promotions.filter((p) => {
+    if (currentUser.role === 'ALLIANCE_ADMIN') {
+      return allianceBizIds.includes(p.businessId) || p.allianceId === userAllianceId;
+    }
+    return p.businessId === (currentUser.businessId || 'biz_apex');
+  });
 
   const filteredCampaigns = myCampaigns.filter((p) => {
     if (activeTab === 'ALL') return true;

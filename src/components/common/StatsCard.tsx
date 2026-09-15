@@ -18,23 +18,23 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   change,
   isPositive = true,
   icon,
-  iconBgColor = 'bg-slate-100 text-slate-700',
+  iconBgColor = 'bg-neutral-900 text-neutral-300',
 }) => {
   return (
-    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between transition-all hover:border-slate-300">
+    <div className="bg-[#0b0b0b] p-5 rounded-2xl border border-neutral-800 shadow-md flex flex-col justify-between transition-all hover:border-red-600/40 text-neutral-100">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-          <h4 className="text-2xl font-bold text-slate-900 mt-1 tracking-tight">{value}</h4>
+          <p className="text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider">{title}</p>
+          <h4 className="text-2xl font-black text-white mt-1 tracking-tight">{value}</h4>
         </div>
-        <div className={`p-3 rounded-lg ${iconBgColor} shrink-0`}>{icon}</div>
+        <div className={`p-2.5 rounded-xl ${iconBgColor} shrink-0 border border-neutral-800`}>{icon}</div>
       </div>
       {(subtitle || change) && (
-        <div className="mt-4 flex items-center justify-between text-xs border-t border-slate-50 pt-3">
+        <div className="mt-4 flex items-center justify-between text-xs border-t border-neutral-900 pt-3">
           {change && (
             <span
-              className={`inline-flex items-center font-semibold ${
-                isPositive ? 'text-emerald-600' : 'text-rose-600'
+              className={`inline-flex items-center font-bold ${
+                isPositive ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {isPositive ? (
@@ -45,7 +45,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               {change}
             </span>
           )}
-          {subtitle && <span className="text-slate-500">{subtitle}</span>}
+          {subtitle && <span className="text-neutral-400 text-[11px] font-medium">{subtitle}</span>}
         </div>
       )}
     </div>

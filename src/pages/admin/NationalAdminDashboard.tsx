@@ -106,19 +106,19 @@ export const NationalAdminDashboard: React.FC = () => {
       header: 'Alliance Name',
       accessor: (row) => (
         <div>
-          <p className="font-bold text-slate-900 text-xs">{row.name}</p>
-          <p className="text-[10px] text-slate-500">{row.city}, {row.country}</p>
+          <p className="font-bold text-white text-xs uppercase">{row.name}</p>
+          <p className="text-[10px] text-neutral-400">{row.city}, {row.country}</p>
         </div>
       ),
     },
     {
       header: 'Active Members',
-      accessor: (row) => <span className="font-bold text-xs text-slate-900">{row.memberCount}</span>,
+      accessor: (row) => <span className="font-bold text-xs text-white">{row.memberCount}</span>,
     },
     {
       header: 'Occupied Categories',
       accessor: (row) => (
-        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+        <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40">
           {row.occupiedCategoriesCount} / {row.totalCategoriesCount}
         </span>
       ),
@@ -126,7 +126,7 @@ export const NationalAdminDashboard: React.FC = () => {
     {
       header: 'Open Categories',
       accessor: (row) => (
-        <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+        <span className="text-xs font-semibold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">
           {row.totalCategoriesCount - row.occupiedCategoriesCount} open
         </span>
       ),
@@ -134,7 +134,7 @@ export const NationalAdminDashboard: React.FC = () => {
     {
       header: 'Status',
       accessor: (row) => (
-        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
           ● {row.status}
         </span>
       ),
@@ -181,72 +181,72 @@ export const NationalAdminDashboard: React.FC = () => {
 
       {/* SYSTEM ALERTS BOX */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900">
+        <div className="p-3.5 bg-amber-950/40 border border-amber-800/40 rounded-xl flex items-center justify-between text-xs text-amber-300">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Pending Applications: <strong>{pendingAppsCount}</strong></span>
+            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Pending Applications: <strong className="text-white">{pendingAppsCount}</strong></span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/businesses')}>View</Button>
+          <Button size="sm" variant="ghost" className="text-amber-400 hover:text-white" onClick={() => navigate('/admin/businesses')}>View</Button>
         </div>
 
-        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+        <div className="p-3.5 bg-purple-950/40 border border-purple-800/40 rounded-xl flex items-center justify-between text-xs text-purple-300">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
-            <span>Pending Promotions: <strong>{pendingPromosCount}</strong></span>
+            <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+            <span>Pending Promotions: <strong className="text-white">{pendingPromosCount}</strong></span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/promotions')}>Review</Button>
+          <Button size="sm" variant="ghost" className="text-purple-400 hover:text-white" onClick={() => navigate('/admin/promotions')}>Review</Button>
         </div>
 
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900">
+        <div className="p-3.5 bg-rose-950/40 border border-rose-800/40 rounded-xl flex items-center justify-between text-xs text-rose-300">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>Payment Issues: <strong>{paymentIssuesCount}</strong></span>
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>Payment Issues: <strong className="text-white">{paymentIssuesCount}</strong></span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/businesses')}>Manage</Button>
+          <Button size="sm" variant="ghost" className="text-rose-400 hover:text-white" onClick={() => navigate('/admin/businesses')}>Manage</Button>
         </div>
 
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-900">
+        <div className="p-3.5 bg-emerald-950/40 border border-emerald-800/40 rounded-xl flex items-center justify-between text-xs text-emerald-300">
           <div className="flex items-center gap-2">
-            <Handshake className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Total Referrals Won: <strong>{referralResultsCount}</strong></span>
+            <Handshake className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Total Referrals Won: <strong className="text-white">{referralResultsCount}</strong></span>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => navigate('/admin/referrals')}>View</Button>
+          <Button size="sm" variant="ghost" className="text-emerald-400 hover:text-white" onClick={() => navigate('/admin/referrals')}>View</Button>
         </div>
       </div>
 
       {/* 8 GLOBAL METRICS GRID */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <div className="p-3.5 bg-white border border-slate-200 rounded-xl">
-          <span className="text-[10px] font-bold text-slate-500 uppercase">Total Alliances</span>
-          <p className="text-xl font-bold text-slate-900 mt-1">{totalAlliancesCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-neutral-800 rounded-xl">
+          <span className="text-[10px] font-extrabold text-neutral-400 uppercase">Total Alliances</span>
+          <p className="text-xl font-black text-white mt-1">{totalAlliancesCount}</p>
         </div>
-        <div className="p-3.5 bg-white border border-slate-200 rounded-xl">
-          <span className="text-[10px] font-bold text-slate-500 uppercase">Total Businesses</span>
-          <p className="text-xl font-bold text-slate-900 mt-1">{totalBusinessesCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-neutral-800 rounded-xl">
+          <span className="text-[10px] font-extrabold text-neutral-400 uppercase">Total Businesses</span>
+          <p className="text-xl font-black text-white mt-1">{totalBusinessesCount}</p>
         </div>
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
-          <span className="text-[10px] font-bold text-emerald-800 uppercase">Active Members</span>
-          <p className="text-xl font-bold text-emerald-900 mt-1">{activeMembersCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-emerald-800/40 rounded-xl">
+          <span className="text-[10px] font-extrabold text-emerald-400 uppercase">Active Members</span>
+          <p className="text-xl font-black text-emerald-400 mt-1">{activeMembersCount}</p>
         </div>
-        <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl">
-          <span className="text-[10px] font-bold text-blue-800 uppercase">Open Categories</span>
-          <p className="text-xl font-bold text-blue-900 mt-1">{openCategoriesCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-blue-800/40 rounded-xl">
+          <span className="text-[10px] font-extrabold text-blue-400 uppercase">Open Categories</span>
+          <p className="text-xl font-black text-blue-400 mt-1">{openCategoriesCount}</p>
         </div>
-        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl">
-          <span className="text-[10px] font-bold text-purple-800 uppercase">Active Promos</span>
-          <p className="text-xl font-bold text-purple-900 mt-1">{activePromotionsCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-purple-800/40 rounded-xl">
+          <span className="text-[10px] font-extrabold text-purple-400 uppercase">Active Promos</span>
+          <p className="text-xl font-black text-purple-400 mt-1">{activePromotionsCount}</p>
         </div>
-        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-          <span className="text-[10px] font-bold text-slate-700 uppercase">Total Referrals</span>
-          <p className="text-xl font-bold text-slate-900 mt-1">{totalReferralsCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-neutral-800 rounded-xl">
+          <span className="text-[10px] font-extrabold text-neutral-400 uppercase">Total Referrals</span>
+          <p className="text-xl font-black text-white mt-1">{totalReferralsCount}</p>
         </div>
-        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
-          <span className="text-[10px] font-bold text-emerald-800 uppercase">Referral Won</span>
-          <p className="text-xl font-bold text-emerald-900 mt-1">{referralResultsCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-emerald-800/40 rounded-xl">
+          <span className="text-[10px] font-extrabold text-emerald-400 uppercase">Referral Won</span>
+          <p className="text-xl font-black text-emerald-400 mt-1">{referralResultsCount}</p>
         </div>
-        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-          <span className="text-[10px] font-bold text-slate-700 uppercase">Pending Apps</span>
-          <p className="text-xl font-bold text-amber-600 mt-1">{pendingAppsCount}</p>
+        <div className="p-3.5 bg-[#0b0b0b] border border-amber-800/40 rounded-xl">
+          <span className="text-[10px] font-extrabold text-amber-400 uppercase">Pending Apps</span>
+          <p className="text-xl font-black text-amber-400 mt-1">{pendingAppsCount}</p>
         </div>
       </div>
 

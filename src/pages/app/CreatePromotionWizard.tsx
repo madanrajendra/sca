@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +27,7 @@ export const CreatePromotionWizard: React.FC = () => {
   const { createPromotion, categories } = useSCAData();
   const { currentUser } = useAuth();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   const [title, setTitle] = useState('');
@@ -237,11 +238,37 @@ export const CreatePromotionWizard: React.FC = () => {
               />
             </div>
 
-            <div className="border-2 border-dashed border-neutral-800 rounded-2xl p-8 text-center hover:border-red-600/50 transition-colors bg-[#050505]">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && file.type.startsWith('image/')) {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setImageUrl(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-neutral-800 rounded-2xl p-8 text-center hover:border-red-600/50 transition-colors bg-[#050505] cursor-pointer"
+            >
               <Upload className="w-10 h-10 text-neutral-500 mx-auto mb-3" />
-              <div className="text-sm font-bold text-white uppercase">Drag & drop files or click to upload assets</div>
-              <div className="text-xs text-neutral-500 mt-1">Supports PNG, JPG, WEBP, PDF, MP4 (Max 25MB)</div>
+              <div className="text-sm font-bold text-white uppercase">Click to upload image (Converts to Base64 String)</div>
+              <div className="text-xs text-neutral-500 mt-1">Supports PNG, JPG, WEBP — automatically stored directly into MongoDB</div>
             </div>
+
+            {imageUrl && (
+              <div className="mt-4 rounded-xl overflow-hidden border border-neutral-800 max-h-48 aspect-video bg-black">
+                <img src={imageUrl} alt="Asset Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
         </div>
       )}

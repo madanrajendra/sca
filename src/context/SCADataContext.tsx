@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import {
   Alliance,
   Category,
@@ -66,6 +66,9 @@ interface SCADataContextType {
   togglePausePromotion: (id: string) => void;
   promoteOffer: (promotionId: string, promoterBusinessId: string, promoterBusinessName: string, promoterUserId: string) => PromotedOffer;
   simulateAdClick: (trackingCode: string) => void;
+  recordPostClick: (postId: string) => Promise<void>;
+  updateBusinessReach: (businessId: string, reachData: { instagramFollowers: number; facebookFollowers: number; miscellaneousFollowers: number; estimatedReach: number }) => void;
+  refreshPosts: () => Promise<void>;
   
   // Business Loop 3: Referrals
   sendReferral: (data: {
@@ -90,6 +93,7 @@ interface SCADataContextType {
   inviteTeamMember: (email: string, name: string, roleTitle: string) => void;
   markNotificationRead: (id: string) => void;
   addCategory: (name: string, description: string, iconName: string) => void;
+  clearCategoryExclusivity: (allianceId: string, categoryId: string) => void;
 }
 
 const SCADataContext = createContext<SCADataContextType | undefined>(undefined);
@@ -138,6 +142,47 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     setNotifications((prev) => [newNotif, ...prev]);
   };
+
+  // Fetch live promotions from MongoDB API
+  const refreshPosts = async () => {
+    try {
+      const res = await fetch('/api/posts');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+        setPromotions(data.posts);
+      }
+    } catch (err) {
+      console.warn('[SCAData] Using local promotions fallback (backend offline or loading):', err);
+    }
+  };
+
+  useEffect(() => {
+    refreshPosts();
+
+    // Fetch settings for active business
+    const bizId = currentUser?.businessId || 'biz_apex';
+    fetch(`/api/settings/${bizId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          const s = data.settings;
+          setBusinesses((prev) =>
+            prev.map((b) =>
+              b.id === bizId
+                ? {
+                    ...b,
+                    estimatedAudience: s.estimatedReach,
+                    instagramFollowers: s.instagramFollowers,
+                    facebookFollowers: s.facebookFollowers,
+                    miscellaneousFollowers: s.miscellaneousFollowers,
+                  }
+                : b
+            )
+          );
+        }
+      })
+      .catch((err) => console.warn('[SCAData] Could not load business settings:', err));
+  }, [currentUser?.businessId]);
 
   // 1. Check Category Exclusivity
   const checkCategoryAvailability = (allianceId: string, categoryId: string) => {
@@ -297,11 +342,11 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
     );
   };
 
-  // 6. Create Promotion Wizard
+  // 6. Create Promotion Wizard / Ad Post (persists live to MongoDB)
   const createPromotion = (
     promoData: Omit<AdSharePromotion, 'id' | 'views' | 'clicks' | 'shares' | 'resultsCount' | 'membersPromotingCount' | 'createdAt'>
   ) => {
-    const newId = `promo_${Date.now()}`;
+    const newId = `promo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newPromo: AdSharePromotion = {
       ...promoData,
       id: newId,
@@ -312,10 +357,68 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
       membersPromotingCount: 0,
       createdAt: new Date().toISOString().substring(0, 10),
     };
+    // Optimistic UI update
     setPromotions((prev) => [newPromo, ...prev]);
+
+    // Persist live to MongoDB Atlas sca database
+    fetch('/api/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newPromo),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.post) {
+          setPromotions((prev) => prev.map((p) => (p.id === newId ? data.post : p)));
+        }
+      })
+      .catch((err) => console.error('[SCAData] Failed to save promotion to MongoDB:', err));
 
     logActivity('Promotion Created', 'AdSharePromotion', newId, `Created AdShare campaign "${promoData.title}"`);
     return newId;
+  };
+
+  // Record click on promotion (both local and in MongoDB)
+  const recordPostClick = async (postId: string) => {
+    setPromotions((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, clicks: (p.clicks || 0) + 1 } : p))
+    );
+    try {
+      const res = await fetch(`/api/posts/${postId}/click`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.post) {
+        setPromotions((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, clicks: data.post.clicks } : p))
+        );
+      }
+    } catch (err) {
+      console.error('[SCAData] Failed to record post click in backend:', err);
+    }
+  };
+
+  // Update business social followers and estimated audience
+  const updateBusinessReach = (
+    businessId: string,
+    reachData: {
+      instagramFollowers: number;
+      facebookFollowers: number;
+      miscellaneousFollowers: number;
+      estimatedReach: number;
+    }
+  ) => {
+    setBusinesses((prev) =>
+      prev.map((b) =>
+        b.id === businessId
+          ? {
+              ...b,
+              estimatedAudience: reachData.estimatedReach,
+              instagramFollowers: reachData.instagramFollowers,
+              facebookFollowers: reachData.facebookFollowers,
+              miscellaneousFollowers: reachData.miscellaneousFollowers,
+            }
+          : b
+      )
+    );
   };
 
   // 7. Update Promotion Status
@@ -557,6 +660,47 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
+  // 16. Clear Category Exclusivity & Revoke Access
+  const clearCategoryExclusivity = (allianceId: string, categoryId: string) => {
+    const cat = categories.find((c) => c.id === categoryId);
+    const statusObj = cat?.allianceMap[allianceId];
+    const occupiedBizId = statusObj?.businessId;
+
+    if (occupiedBizId) {
+      setBusinesses((prev) =>
+        prev.map((b) => (b.id === occupiedBizId ? { ...b, membershipStatus: 'REJECTED' } : b))
+      );
+    }
+
+    setCategories((prev) =>
+      prev.map((c) => {
+        if (c.id === categoryId) {
+          const updatedAllianceMap = { ...c.allianceMap };
+          delete updatedAllianceMap[allianceId];
+          return {
+            ...c,
+            allianceMap: updatedAllianceMap,
+          };
+        }
+        return c;
+      })
+    );
+
+    setAlliances((prev) =>
+      prev.map((a) => {
+        if (a.id === allianceId) {
+          return {
+            ...a,
+            occupiedCategoriesCount: Math.max(0, a.occupiedCategoriesCount - 1),
+          };
+        }
+        return a;
+      })
+    );
+
+    logActivity('Category Exclusivity Cleared', 'Category', categoryId, `Cleared exclusivity for category "${cat?.name}" in alliance ${allianceId}. Business login revoked.`);
+  };
+
   return (
     <SCADataContext.Provider
       value={{
@@ -579,12 +723,16 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
         togglePausePromotion,
         promoteOffer,
         simulateAdClick,
+        recordPostClick,
+        updateBusinessReach,
+        refreshPosts,
         sendReferral,
         updateReferralStatus,
         createAlliance,
         inviteTeamMember,
         markNotificationRead,
         addCategory,
+        clearCategoryExclusivity,
       }}
     >
       {children}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSCAData } from '../../context/SCADataContext';
 import { ROLE_LABELS } from '../../utils/rbac';
@@ -21,30 +21,42 @@ import {
   Grid,
   History,
   Activity,
-  CreditCard
+  CreditCard,
+  Globe
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const { notifications, businesses } = useSCAData();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n) => !n.read && n.userId === currentUser.id).length;
   const pendingAppsCount = businesses.filter((b) => b.membershipStatus === 'PENDING_APPROVAL').length;
 
   let navItems: { label: string; path: string; icon: React.ReactNode; badge?: number | string }[] = [];
 
-  if (currentUser.role === 'NATIONAL_ADMIN' || currentUser.role === 'ALLIANCE_ADMIN') {
+  if (currentUser.role === 'NATIONAL_ADMIN') {
     navItems = [
-      { label: 'Overview Dashboard', path: '/admin', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { label: 'Campaign Moderation', path: '/admin/promotions', icon: <Sparkles className="w-4 h-4" /> },
+      { label: 'National Directory', path: '/admin/directory', icon: <Globe className="w-4 h-4" /> },
+      { label: 'Platform Console', path: '/admin/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
       { label: 'Member Approvals', path: '/admin/businesses', icon: <Building2 className="w-4 h-4" />, badge: pendingAppsCount || undefined },
+      { label: 'Campaign Moderation', path: '/admin/promotions', icon: <Sparkles className="w-4 h-4" /> },
       { label: 'Category Exclusivity', path: '/admin/categories', icon: <Grid className="w-4 h-4" /> },
       { label: 'Payments', path: '/admin/payments', icon: <CreditCard className="w-4 h-4" /> },
-      { label: 'Alliance Directory', path: '/app/directory', icon: <BookOpen className="w-4 h-4" /> },
-      { label: 'Promote Alliance', path: '/app/promote-alliance', icon: <Share2 className="w-4 h-4" /> },
       { label: 'Network Analytics', path: '/admin/analytics', icon: <BarChart3 className="w-4 h-4" /> },
       { label: 'Audit Log', path: '/admin/activity', icon: <History className="w-4 h-4" /> },
+      { label: 'Notifications', path: '/app/notifications', icon: <Bell className="w-4 h-4" />, badge: unreadCount || undefined },
+      { label: 'Settings', path: '/app/settings', icon: <Settings className="w-4 h-4" /> },
+    ];
+  } else if (currentUser.role === 'ALLIANCE_ADMIN') {
+    navItems = [
+      { label: 'Alliance Directory', path: '/app/directory', icon: <BookOpen className="w-4 h-4" /> },
+      { label: 'Alliance Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+      { label: 'Member Approvals', path: '/admin/businesses', icon: <Building2 className="w-4 h-4" />, badge: pendingAppsCount || undefined },
+      { label: 'Campaign Moderation', path: '/admin/promotions', icon: <Sparkles className="w-4 h-4" /> },
+      { label: 'Category Exclusivity', path: '/admin/categories', icon: <Grid className="w-4 h-4" /> },
+      { label: 'Promote Alliance', path: '/app/promote-alliance', icon: <Share2 className="w-4 h-4" /> },
       { label: 'Notifications', path: '/app/notifications', icon: <Bell className="w-4 h-4" />, badge: unreadCount || undefined },
       { label: 'Settings', path: '/app/settings', icon: <Settings className="w-4 h-4" /> },
     ];
@@ -132,8 +144,11 @@ export const Sidebar: React.FC = () => {
         </div>
 
         <button
-          onClick={logout}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold uppercase text-neutral-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-neutral-900"
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold uppercase text-neutral-400 hover:text-red-400 hover:bg-red-950/30 transition-colors border border-neutral-900 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" /> Sign Out Session
         </button>

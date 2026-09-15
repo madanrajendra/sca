@@ -48,13 +48,23 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+import { useAuth } from '../../context/AuthContext';
+
 export const BusinessDirectory: React.FC = () => {
   const { businesses, promotions } = useSCAData();
+  const { currentUser } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedBiz, setSelectedBiz] = useState<Business | null>(null);
   const navigate = useNavigate();
 
-  const activeMembers = businesses.filter((b) => b.membershipStatus === 'ACTIVE');
+  const userAllianceId = currentUser.allianceId || 'all_blr';
+
+  let activeMembers = businesses.filter((b) => b.membershipStatus === 'ACTIVE');
+
+  // Strict scoping for Alliance Admin & alliance-scoped members
+  if (currentUser.role === 'ALLIANCE_ADMIN' || currentUser.allianceId) {
+    activeMembers = activeMembers.filter((b) => b.allianceId === userAllianceId);
+  }
 
   const filteredMembers = activeMembers.filter(
     (b) =>
@@ -70,11 +80,15 @@ export const BusinessDirectory: React.FC = () => {
         <div>
           <div className="flex items-center space-x-2 text-[#e50914] text-xs font-black uppercase tracking-wider mb-1">
             <BookOpen className="w-4 h-4" />
-            <span>Trusted Business Network</span>
+            <span>Trusted Business Network • {currentUser.allianceName || 'Bangalore Alliance'}</span>
           </div>
-          <h1 className="text-3xl font-black uppercase tracking-tight text-white">ALLIANCE DIRECTORY</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            {currentUser.role === 'ALLIANCE_ADMIN'
+              ? `${currentUser.allianceName || 'BANGALORE BUSINESS ALLIANCE'} DIRECTORY`
+              : 'ALLIANCE DIRECTORY'}
+          </h1>
           <p className="text-sm text-neutral-400 mt-1">
-            Discover trusted peer businesses in the Spin City Alliance. Collaborate, co-market, and send warm referrals.
+            Discover trusted peer businesses in {currentUser.allianceName || 'the alliance'}. Collaborate, co-market, and send warm referrals.
           </p>
         </div>
 

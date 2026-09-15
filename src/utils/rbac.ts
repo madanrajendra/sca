@@ -56,8 +56,8 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const ROLE_DEFAULT_ROUTES: Record<Role, string> = {
-  NATIONAL_ADMIN: '/admin',
-  ALLIANCE_ADMIN: '/alliance',
+  NATIONAL_ADMIN: '/admin/directory',
+  ALLIANCE_ADMIN: '/app/directory',
   BUSINESS_OWNER: '/app/dashboard',
   TEAM_MEMBER: '/team/dashboard',
 };

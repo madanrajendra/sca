@@ -62,11 +62,11 @@ export function Table<T extends Record<string, any>>({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="bg-[#0b0b0b] rounded-2xl border border-neutral-800 overflow-hidden text-neutral-100 shadow-xl">
       {/* Search Bar */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+      <div className="p-4 border-b border-neutral-900 flex items-center justify-between gap-4 bg-[#050505]">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-500" />
           <input
             type="text"
             value={searchTerm}
@@ -75,39 +75,39 @@ export function Table<T extends Record<string, any>>({
               setCurrentPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-[#0b0b0b] border border-neutral-800 rounded-xl text-white focus:outline-none focus:border-red-600 transition-all"
           />
         </div>
-        <div className="text-xs text-slate-500 font-medium">
+        <div className="text-xs text-neutral-400 font-semibold">
           Showing {paginatedData.length} of {filteredData.length} records
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+        <table className="w-full text-left text-xs text-neutral-300">
+          <thead className="bg-[#050505] text-[10px] font-black text-neutral-400 uppercase tracking-wider border-b border-neutral-900">
             <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => col.sortable && handleSort(col)}
-                  className={`px-4 py-3 ${col.sortable ? 'cursor-pointer select-none hover:text-slate-800' : ''} ${
+                  className={`px-4 py-3.5 ${col.sortable ? 'cursor-pointer select-none hover:text-white' : ''} ${
                     col.className || ''
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span>{col.header}</span>
-                    {col.sortable && <ArrowUpDown className="w-3 h-3 text-slate-400" />}
+                    {col.sortable && <ArrowUpDown className="w-3 h-3 text-neutral-500" />}
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-neutral-900">
             {paginatedData.length > 0 ? (
               paginatedData.map((row) => (
-                <tr key={keyExtractor(row)} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={keyExtractor(row)} className="hover:bg-neutral-900/60 transition-colors">
                   {columns.map((col, cIdx) => (
                     <td key={cIdx} className={`px-4 py-3.5 ${col.className || ''}`}>
                       {typeof col.accessor === 'function'
@@ -119,7 +119,7 @@ export function Table<T extends Record<string, any>>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="text-center py-10 text-slate-400 font-medium">
+                <td colSpan={columns.length} className="text-center py-10 text-neutral-500 font-medium">
                   {emptyText}
                 </td>
               </tr>
@@ -130,21 +130,21 @@ export function Table<T extends Record<string, any>>({
 
       {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-neutral-900 bg-[#050505] flex items-center justify-between">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center text-xs font-medium text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center text-xs font-bold text-neutral-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4 mr-1" /> Previous
           </button>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-neutral-400 font-semibold">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center text-xs font-medium text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center text-xs font-bold text-neutral-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Next <ChevronRight className="w-4 h-4 ml-1" />
           </button>

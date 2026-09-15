@@ -3,13 +3,15 @@ import { ShieldAlert, ArrowLeft, Lock } from 'lucide-react';
 import { Button } from './Button';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_LABELS } from '../../utils/rbac';
+import { useNavigate } from 'react-router-dom';
 
 interface PermissionDeniedStateProps {
   requiredPermission?: string;
 }
 
 export const PermissionDeniedState: React.FC<PermissionDeniedStateProps> = ({ requiredPermission }) => {
-  const { currentUser, switchUserRole } = useAuth();
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
@@ -49,8 +51,14 @@ export const PermissionDeniedState: React.FC<PermissionDeniedStateProps> = ({ re
         <Button onClick={() => window.history.back()} variant="outline" leftIcon={<ArrowLeft className="w-4 h-4" />}>
           Go Back
         </Button>
-        <Button onClick={() => switchUserRole('NATIONAL_ADMIN')}>
-          Switch to National Admin
+        <Button
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+          variant="secondary"
+        >
+          Sign Out & Switch Account
         </Button>
       </div>
     </div>

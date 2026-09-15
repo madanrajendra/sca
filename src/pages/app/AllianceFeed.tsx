@@ -3,6 +3,8 @@ import { useSCAData } from '../../context/SCADataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { getOwnerAvatar } from '../../utils/avatars';
+import { ShareModal } from '../../components/common/ShareModal';
+import { AdSharePromotion } from '../../types';
 import {
   Megaphone,
   Users,
@@ -22,6 +24,9 @@ export const AllianceFeed: React.FC = () => {
   const { promotions, promotedOffers, businesses, promoteOffer } = useSCAData();
   const { currentUser } = useAuth();
   
+  // Share modal state
+  const [sharingPost, setSharingPost] = useState<AdSharePromotion | null>(null);
+
   // Hovered post ID for tooltip
   const [hoveredPostId, setHoveredPostId] = useState<string | null>(null);
 
@@ -226,10 +231,13 @@ export const AllianceFeed: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-[#e50914]">
-                        <Share2 className="w-4 h-4" />
-                        <span>{post.shares.toLocaleString()} Shares</span>
-                      </div>
+                      <button
+                        onClick={() => setSharingPost(post)}
+                        className="flex items-center space-x-1.5 text-red-400 hover:text-white bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 hover:border-red-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm active:scale-95"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Share ({post.shares || 0})</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -346,6 +354,13 @@ export const AllianceFeed: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Share Modal Dialog */}
+      <ShareModal
+        post={sharingPost}
+        isOpen={!!sharingPost}
+        onClose={() => setSharingPost(null)}
+      />
     </div>
   );
 };

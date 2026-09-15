@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
 import { useAuth } from '../../context/AuthContext';
+import { ShareModal } from '../../components/common/ShareModal';
 import {
   ArrowLeft,
   UploadCloud,
@@ -11,7 +12,9 @@ import {
   Check,
   Image as ImageIcon,
   Flame,
-  Globe
+  Globe,
+  CheckCircle2,
+  FileCode,
 } from 'lucide-react';
 
 interface GalleryImage {
@@ -49,13 +52,60 @@ export const CreateFeedPost: React.FC = () => {
   const scaLogoUrl = 'https://thumbs.dreamstime.com/b/letter-sca-simple-monogram-logo-icon-design-letter-sca-simple-monogram-logo-icon-design-initial-logo-vector-illustration-251468157.jpg';
   const logoUrl = myBusiness?.logo || 'https://static.wixstatic.com/media/fd8c12_f8c0c711939348c6adc89cb082e8d0e5~mv2.jpg/v1/fit/w_2500,h_1330,al_c/fd8c12_f8c0c711939348c6adc89cb082e8d0e5~mv2.jpg';
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageStringInfo, setImageStringInfo] = useState<string | null>(null);
+  const [createdPostForModal, setCreatedPostForModal] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPG, WebP, etc.)');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      setSelectedImageUrl(base64String);
+      setGalleryImages((prev) => [{ url: base64String, clicks: 0 }, ...prev]);
+      const sizeKb = (base64String.length / 1024).toFixed(1);
+      setImageStringInfo(`Converted to String (${sizeKb} KB Base64) for MongoDB`);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
   const handlePostCampaign = () => {
     if (!postTitle || !postDesc) {
       alert('Please enter a draft title and description first.');
       return;
     }
 
-    createPromotion({
+    const newId = createPromotion({
       businessId: myBusiness?.id || 'biz_apex',
       businessName: myBusiness?.name || bizName,
       businessLogo: myBusiness?.logo || logoUrl,
@@ -64,6 +114,7 @@ export const CreateFeedPost: React.FC = () => {
       shortDescription: postDesc.substring(0, 80) + (postDesc.length > 80 ? '...' : ''),
       description: postDesc,
       categoryName: bizField || myBusiness?.categoryName || 'General Services',
+      // Base64 string or gallery URL stored directly in MongoDB
       imageUrl: selectedImageUrl,
       offer: bizOffer,
       startDate: new Date().toISOString().split('T')[0],
@@ -74,9 +125,24 @@ export const CreateFeedPost: React.FC = () => {
       shareMessage: postDesc,
       status: 'LIVE',
       estimatedReach: myBusiness?.estimatedAudience || 15000,
+      leadsCount: 0,
+      referralsCount: 0,
+      reportedSalesCount: 0,
+      estimatedRevenue: 0,
     });
 
-    navigate('/app/feed');
+    // Display Sharable Link Modal immediately for this post
+    setCreatedPostForModal({
+      id: newId,
+      title: postTitle,
+      description: postDesc,
+      imageUrl: selectedImageUrl,
+      businessName: myBusiness?.name || bizName,
+      offer: bizOffer,
+      clicks: 0,
+      views: 1,
+      estimatedReach: myBusiness?.estimatedAudience || 15000,
+    });
   };
 
   // Generate the prompt text
@@ -105,21 +171,6 @@ Important: Do not stop after generating the image! Make sure you output both the
     } catch (err) {
       console.error('Failed to copy text', err);
     }
-  };
-
-  const triggerUploadSimulator = () => {
-    // Simulate uploading a random image with 0 clicks
-    const randomUrls = [
-      'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1542744094-3a31f103e35f?w=400&auto=format&fit=crop&q=80'
-    ];
-    const newImg = {
-      url: randomUrls[Math.floor(Math.random() * randomUrls.length)],
-      clicks: 0
-    };
-    setGalleryImages((prev) => [newImg, ...prev]);
-    setSelectedImageUrl(newImg.url);
   };
 
   const handleOpenChatGPT = () => {
@@ -176,16 +227,36 @@ Important: Do not stop after generating the image! Make sure you output both the
               </div>
             </div>
 
-            {/* Drag & Drop Simulation Card */}
+            {/* Real File Upload & Drag-and-Drop (Converts Image to Base64 String for MongoDB) */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
             <div
-              onClick={triggerUploadSimulator}
-              className="border-2 border-dashed border-neutral-800 hover:border-red-600/50 rounded-xl p-6 text-center cursor-pointer transition-colors bg-[#050505]"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                isDragging
+                  ? 'border-red-500 bg-red-950/30 scale-[1.01]'
+                  : 'border-neutral-800 hover:border-red-600/50 bg-[#050505]'
+              }`}
             >
-              <UploadCloud className="w-8 h-8 text-neutral-500 mx-auto mb-2" />
-              <div className="text-xs font-bold text-white">Upload New Asset</div>
+              <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-colors ${isDragging ? 'text-red-500' : 'text-neutral-500'}`} />
+              <div className="text-xs font-bold text-white">Upload New Asset (Converts to Base64 String)</div>
               <p className="text-[10px] text-neutral-500 mt-1">
-                Drag and drop your ad design, or click to upload.
+                Drag and drop your ad design image (PNG, JPG, WebP), or click to browse.
               </p>
+              {imageStringInfo && (
+                <div className="mt-2.5 inline-flex items-center space-x-1.5 bg-emerald-950/50 border border-emerald-800/60 px-2.5 py-1 rounded-md text-[10px] font-bold text-emerald-400">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{imageStringInfo}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -388,6 +459,16 @@ Important: Do not stop after generating the image! Make sure you output both the
           </div>
         </div>
       </div>
+
+      {/* Share Modal displayed right after post is created */}
+      <ShareModal
+        post={createdPostForModal}
+        isOpen={!!createdPostForModal}
+        onClose={() => {
+          setCreatedPostForModal(null);
+          navigate('/app/feed');
+        }}
+      />
     </div>
   );
 };

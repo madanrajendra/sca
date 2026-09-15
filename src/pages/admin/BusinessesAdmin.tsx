@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { useSCAData } from '../../context/SCADataContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Building2,
   CheckCircle2,
   XCircle,
-  Clock,
-  ShieldCheck,
-  Search,
-  Filter
 } from 'lucide-react';
 
 export const BusinessesAdmin: React.FC = () => {
   const { businesses, approveBusinessApplication, rejectBusinessApplication } = useSCAData();
+  const { currentUser } = useAuth();
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'REJECTED'>('PENDING');
 
-  const filtered = businesses.filter((b) => {
+  // Filter businesses strictly for Alliance Admin's own alliance
+  const scopedBusinesses =
+    currentUser.role === 'ALLIANCE_ADMIN' && currentUser.allianceId
+      ? businesses.filter((b) => b.allianceId === currentUser.allianceId)
+      : businesses;
+
+  const filtered = scopedBusinesses.filter((b) => {
     if (filter === 'ALL') return true;
     if (filter === 'PENDING') return b.membershipStatus === 'PENDING_APPROVAL';
     if (filter === 'ACTIVE') return b.membershipStatus === 'ACTIVE';
@@ -32,7 +36,9 @@ export const BusinessesAdmin: React.FC = () => {
           </div>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white">MEMBER APPLICATIONS</h1>
           <p className="text-sm text-neutral-400 mt-1">
-            Review applicant businesses, verify category availability, and approve new alliance members.
+            {currentUser.role === 'ALLIANCE_ADMIN'
+              ? `Review applicant businesses for ${currentUser.allianceName || 'your alliance'}.`
+              : 'Review applicant businesses, verify category availability, and approve new alliance members.'}
           </p>
         </div>
 
@@ -41,7 +47,7 @@ export const BusinessesAdmin: React.FC = () => {
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all cursor-pointer ${
                 filter === tab ? 'bg-[#e50914] text-white' : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -77,14 +83,14 @@ export const BusinessesAdmin: React.FC = () => {
                   <div className="flex items-center space-x-3 shrink-0">
                     <button
                       onClick={() => rejectBusinessApplication(biz.id, 'Category conflict')}
-                      className="px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-red-400 text-xs font-extrabold uppercase flex items-center space-x-1.5"
+                      className="px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-red-400 text-xs font-extrabold uppercase flex items-center space-x-1.5 cursor-pointer"
                     >
                       <XCircle className="w-4 h-4" />
                       <span>Reject</span>
                     </button>
                     <button
                       onClick={() => approveBusinessApplication(biz.id)}
-                      className="adshare-red-btn px-5 py-2.5 rounded-xl text-xs font-black uppercase flex items-center space-x-1.5"
+                      className="adshare-red-btn px-5 py-2.5 rounded-xl text-xs font-black uppercase flex items-center space-x-1.5 cursor-pointer"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Approve Member</span>
