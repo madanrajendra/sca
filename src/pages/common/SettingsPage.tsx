@@ -83,7 +83,7 @@ export const SettingsPage: React.FC = () => {
       if (data.success) {
         updateBusinessReach(myBusinessId, payload);
         setSaveMessage(
-          `Settings saved to MongoDB! Estimated reach of ${calculatedEstimatedReach.toLocaleString()} members is now active for ${myBusiness?.name || 'your business'}.`
+          `Settings saved successfully! Estimated reach of ${calculatedEstimatedReach.toLocaleString()} members is now active for ${myBusiness?.name || 'your business'}.`
         );
       } else {
         updateBusinessReach(myBusinessId, payload);
@@ -268,7 +268,7 @@ export const SettingsPage: React.FC = () => {
 
             <div className="flex justify-end pt-2">
               <Button type="submit" leftIcon={<Save className="w-4 h-4" />}>
-                Save Reach & Followers to MongoDB
+                Save Reach & Followers
               </Button>
             </div>
           </form>

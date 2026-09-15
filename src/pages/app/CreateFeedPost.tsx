@@ -69,7 +69,7 @@ export const CreateFeedPost: React.FC = () => {
       setSelectedImageUrl(base64String);
       setGalleryImages((prev) => [{ url: base64String, clicks: 0 }, ...prev]);
       const sizeKb = (base64String.length / 1024).toFixed(1);
-      setImageStringInfo(`Converted to String (${sizeKb} KB Base64) for MongoDB`);
+      setImageStringInfo(`Asset uploaded successfully (${sizeKb} KB)`);
     };
     reader.readAsDataURL(file);
   };
@@ -247,7 +247,7 @@ Important: Do not stop after generating the image! Make sure you output both the
               }`}
             >
               <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-colors ${isDragging ? 'text-red-500' : 'text-neutral-500'}`} />
-              <div className="text-xs font-bold text-white">Upload New Asset (Converts to Base64 String)</div>
+              <div className="text-xs font-bold text-white">Upload New Asset</div>
               <p className="text-[10px] text-neutral-500 mt-1">
                 Drag and drop your ad design image (PNG, JPG, WebP), or click to browse.
               </p>

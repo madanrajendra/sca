@@ -260,8 +260,8 @@ export const CreatePromotionWizard: React.FC = () => {
               className="border-2 border-dashed border-neutral-800 rounded-2xl p-8 text-center hover:border-red-600/50 transition-colors bg-[#050505] cursor-pointer"
             >
               <Upload className="w-10 h-10 text-neutral-500 mx-auto mb-3" />
-              <div className="text-sm font-bold text-white uppercase">Click to upload image (Converts to Base64 String)</div>
-              <div className="text-xs text-neutral-500 mt-1">Supports PNG, JPG, WEBP — automatically stored directly into MongoDB</div>
+              <div className="text-sm font-bold text-white uppercase">Click to upload image asset</div>
+              <div className="text-xs text-neutral-500 mt-1">Supports PNG, JPG, WEBP (Max 25MB)</div>
             </div>
 
             {imageUrl && (
