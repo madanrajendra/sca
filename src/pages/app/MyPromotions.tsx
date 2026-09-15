@@ -2,26 +2,22 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSCAData } from '../../context/SCADataContext';
 import { useAuth } from '../../context/AuthContext';
+import { ShareModal } from '../../components/common/ShareModal';
+import { AdSharePromotion } from '../../types';
 import {
   Share2,
   Plus,
-  Eye,
-  MousePointerClick,
-  Users,
-  Flame,
+  Trash2,
   Pause,
   Play,
-  TrendingUp,
-  Award,
-  DollarSign,
-  MoreVertical
 } from 'lucide-react';
 
 export const MyPromotions: React.FC = () => {
-  const { promotions, businesses, togglePausePromotion } = useSCAData();
+  const { promotions, businesses, togglePausePromotion, deletePromotion } = useSCAData();
   const { currentUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'LIVE' | 'DRAFT' | 'PAUSED'>('ALL');
+  const [sharingPost, setSharingPost] = useState<AdSharePromotion | null>(null);
 
   const userAllianceId = currentUser.allianceId || 'all_blr';
   const allianceBizIds = businesses.filter((b) => b.allianceId === userAllianceId).map((b) => b.id);
@@ -38,6 +34,12 @@ export const MyPromotions: React.FC = () => {
     return p.status === activeTab;
   });
 
+  const handleDelete = (promo: AdSharePromotion) => {
+    if (window.confirm(`Are you sure you want to delete "${promo.title}"?`)) {
+      deletePromotion(promo.id);
+    }
+  };
+
   return (
     <div className="p-6 md:p-8 bg-[#050505] min-h-screen text-neutral-100 font-sans space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-red-600/20 pb-6">
@@ -53,7 +55,7 @@ export const MyPromotions: React.FC = () => {
         </div>
 
         <Link
-          to="/app/promotions/create"
+          to="/app/feed/create"
           className="adshare-red-btn px-5 py-3 rounded-xl text-xs font-black flex items-center space-x-2 shadow-lg shadow-red-600/30"
         >
           <Plus className="w-5 h-5" />
@@ -81,6 +83,13 @@ export const MyPromotions: React.FC = () => {
             <Share2 className="w-12 h-12 text-neutral-600 mx-auto" />
             <h3 className="text-xl font-bold uppercase text-white">No campaigns in this view</h3>
             <p className="text-xs text-neutral-400">Click "Create New Campaign" to launch a campaign into the alliance.</p>
+            <Link
+              to="/app/feed/create"
+              className="inline-flex items-center space-x-2 adshare-red-btn px-4 py-2.5 rounded-xl text-xs font-black"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Launch Campaign</span>
+            </Link>
           </div>
         ) : (
           filteredCampaigns.map((promo) => (
@@ -102,20 +111,38 @@ export const MyPromotions: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2.5 flex-wrap gap-y-2">
+                  <button
+                    onClick={() => setSharingPost(promo)}
+                    className="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 hover:text-white text-xs font-bold uppercase flex items-center space-x-1.5 transition-all"
+                    title="Share Campaign Link"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-red-500" />
+                    <span>Share</span>
+                  </button>
+
                   <button
                     onClick={() => togglePausePromotion(promo.id)}
                     className="p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 text-xs font-bold uppercase flex items-center space-x-1"
                   >
-                    {promo.status === 'PAUSED' ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
+                    {promo.status === 'PAUSED' ? <Play className="w-3.5 h-3.5 text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-400" />}
                     <span>{promo.status === 'PAUSED' ? 'Resume' : 'Pause'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(promo)}
+                    className="p-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-red-400 hover:text-white text-xs font-bold uppercase flex items-center space-x-1.5 transition-all"
+                    title="Delete Campaign"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Delete</span>
                   </button>
 
                   <Link
                     to="/app/analytics"
                     className="adshare-red-btn px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase"
                   >
-                    View Analytics
+                    Analytics
                   </Link>
                 </div>
               </div>
@@ -150,6 +177,13 @@ export const MyPromotions: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* Share Modal Dialog */}
+      <ShareModal
+        post={sharingPost}
+        isOpen={!!sharingPost}
+        onClose={() => setSharingPost(null)}
+      />
     </div>
   );
 };

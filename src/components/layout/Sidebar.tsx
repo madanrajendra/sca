@@ -63,13 +63,12 @@ export const Sidebar: React.FC = () => {
   } else {
     navItems = [
       { label: 'Dashboard', path: '/app/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { label: 'Marketplace', path: '/app/adshare', icon: <Sparkles className="w-4 h-4" /> },
+      { label: 'Marketplace Feed', path: '/app/feed', icon: <Activity className="w-4 h-4" /> },
       { label: 'My Campaigns', path: '/app/promotions', icon: <Share2 className="w-4 h-4" /> },
       { label: 'Promoted Campaigns', path: '/app/promoted', icon: <ArrowUpRight className="w-4 h-4" /> },
       { label: 'Analytics', path: '/app/analytics', icon: <BarChart3 className="w-4 h-4" /> },
       { label: 'Referral Hub', path: '/app/referrals', icon: <Handshake className="w-4 h-4" /> },
       { label: 'Marketing Calendar', path: '/app/calendar', icon: <Calendar className="w-4 h-4" /> },
-      { label: 'Ad Share Marketplace', path: '/app/feed', icon: <Activity className="w-4 h-4" /> },
       { label: 'Alliance Directory', path: '/app/directory', icon: <BookOpen className="w-4 h-4" /> },
       { label: 'Promote Alliance', path: '/app/promote-alliance', icon: <Share2 className="w-4 h-4" /> },
       { label: 'Leaderboard', path: '/app/leaderboard', icon: <Trophy className="w-4 h-4" /> },

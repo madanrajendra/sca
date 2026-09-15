@@ -377,55 +377,13 @@ export async function handleShareRoute(req: Request, res: Response) {
         <span style="font-size:24px;">🎁</span>
       </div>` : ''}
 
-      <div class="metrics-bar">
-        <div class="metric-item">
-          <span>👆 Clicks Registered:</span>
-          <span class="metric-val" id="clickCount">${totalClicks}</span>
-        </div>
-        <div class="metric-item">
-          <span>👀 Views:</span>
-          <span class="metric-val">${post.views || 1}</span>
-        </div>
-        <div class="metric-item">
-          <span>⚡ Reach:</span>
-          <span class="metric-val">${Number(post.estimatedReach || 15000).toLocaleString()}</span>
-        </div>
-      </div>
-
       <div class="cta-row">
         <a href="${destinationUrl}" target="_blank" rel="noopener noreferrer" class="primary-btn">
           ${escapeHtml(post.cta || 'Claim Offer & Visit Website')} ➔
         </a>
-
-        <div class="share-row">
-          <button class="secondary-btn" onclick="copyShareLink()">
-            📋 Copy Share Link
-          </button>
-          <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(safeTitle + ' ' + fullUrl)}" target="_blank" rel="noopener" class="secondary-btn">
-            💬 WhatsApp
-          </a>
-          <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(safeTitle)}&url=${encodeURIComponent(fullUrl)}" target="_blank" rel="noopener" class="secondary-btn">
-            🐦 X (Twitter)
-          </a>
-          <a href="/app/feed" class="secondary-btn">
-            🌐 Open In App
-          </a>
-        </div>
       </div>
     </div>
   </div>
-
-  <div id="toast" class="toast">Link copied to clipboard!</div>
-
-  <script>
-    function copyShareLink() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        const toast = document.getElementById('toast');
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-      });
-    }
-  </script>
 </body>
 </html>`;
 

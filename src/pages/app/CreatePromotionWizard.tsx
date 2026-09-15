@@ -103,11 +103,11 @@ export const CreatePromotionWizard: React.FC = () => {
     <div className="p-6 md:p-8 bg-[#050505] min-h-screen text-neutral-100 font-sans max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <button
-          onClick={() => navigate('/app/adshare')}
+          onClick={() => navigate('/app/feed')}
           className="flex items-center space-x-2 text-xs font-bold text-neutral-400 hover:text-white uppercase transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Marketplace</span>
+          <span>Back to Feed</span>
         </button>
 
         <div className="flex items-center space-x-2 text-xs font-extrabold uppercase text-[#e50914] bg-red-950/40 border border-red-800/40 px-3 py-1.5 rounded-full">

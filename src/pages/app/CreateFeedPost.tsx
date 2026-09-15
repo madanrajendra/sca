@@ -22,25 +22,77 @@ interface GalleryImage {
   clicks: number;
 }
 
+const defaultStockBanners: GalleryImage[] = [
+  { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80', clicks: 245 },
+  { url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&auto=format&fit=crop&q=80', clicks: 184 },
+  { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=80', clicks: 92 },
+  { url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&auto=format&fit=crop&q=80', clicks: 43 }
+];
+
 export const CreateFeedPost: React.FC = () => {
   const navigate = useNavigate();
-  const { businesses, createPromotion } = useSCAData();
+  const { businesses, promotions, createPromotion } = useSCAData();
   const { currentUser } = useAuth();
 
   // Find business of active user
   const myBusinessId = currentUser.businessId || 'biz_apex';
   const myBusiness = businesses.find((b) => b.id === myBusinessId);
 
-  // Seed standard gallery images with click counts
-  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([
-    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80', clicks: 245 },
-    { url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&auto=format&fit=crop&q=80', clicks: 184 },
-    { url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=80', clicks: 92 },
-    { url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&auto=format&fit=crop&q=80', clicks: 43 }
-  ]);
+  // Local storage uploaded / saved gallery images
+  const [localGallery, setLocalGallery] = useState<GalleryImage[]>(() => {
+    try {
+      const saved = localStorage.getItem('sca_uploaded_gallery_images');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Calculate combined gallery images:
+  // 1. Any image uploaded or saved
+  // 2. All images from active promotions/posts in MongoDB (with their live clicks!)
+  // 3. Curated stock banners
+  const galleryImages = React.useMemo(() => {
+    const map = new Map<string, GalleryImage>();
+
+    // 1. Stock banners
+    for (const s of defaultStockBanners) {
+      map.set(s.url, { ...s });
+    }
+
+    // 2. Local uploads / used images
+    for (const item of localGallery) {
+      if (item?.url) {
+        map.set(item.url, { ...item });
+      }
+    }
+
+    // 3. All images from promotions in database with real-time tracked clicks!
+    for (const p of promotions) {
+      if (p.imageUrl) {
+        const existing = map.get(p.imageUrl);
+        const clicks = Math.max(p.clicks || 0, existing?.clicks || 0);
+        map.set(p.imageUrl, {
+          url: p.imageUrl,
+          clicks,
+        });
+      }
+    }
+
+    return Array.from(map.values()).reverse();
+  }, [localGallery, promotions]);
 
   // UI state
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string>(galleryImages[0].url);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('sca_uploaded_gallery_images');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.[0]?.url) return parsed[0].url;
+      }
+    } catch {}
+    return defaultStockBanners[0].url;
+  });
   const [postTitle, setPostTitle] = useState('');
   const [postDesc, setPostDesc] = useState('');
   const [bizName, setBizName] = useState(myBusiness?.name || '');
@@ -67,7 +119,15 @@ export const CreateFeedPost: React.FC = () => {
     reader.onload = (e) => {
       const base64String = e.target?.result as string;
       setSelectedImageUrl(base64String);
-      setGalleryImages((prev) => [{ url: base64String, clicks: 0 }, ...prev]);
+      setLocalGallery((prev) => {
+        const updated = [{ url: base64String, clicks: 0 }, ...prev.filter(x => x.url !== base64String)];
+        try {
+          localStorage.setItem('sca_uploaded_gallery_images', JSON.stringify(updated.slice(0, 30)));
+        } catch (err) {
+          console.warn('LocalStorage limit for gallery images', err);
+        }
+        return updated;
+      });
       const sizeKb = (base64String.length / 1024).toFixed(1);
       setImageStringInfo(`Asset uploaded successfully (${sizeKb} KB)`);
     };
@@ -129,6 +189,15 @@ export const CreateFeedPost: React.FC = () => {
       referralsCount: 0,
       reportedSalesCount: 0,
       estimatedRevenue: 0,
+    });
+
+    // Ensure published image is stored in Media Gallery
+    setLocalGallery((prev) => {
+      const updated = [{ url: selectedImageUrl, clicks: 0 }, ...prev.filter((x) => x.url !== selectedImageUrl)];
+      try {
+        localStorage.setItem('sca_uploaded_gallery_images', JSON.stringify(updated.slice(0, 30)));
+      } catch {}
+      return updated;
     });
 
     // Display Sharable Link Modal immediately for this post
@@ -262,22 +331,40 @@ Important: Do not stop after generating the image! Make sure you output both the
 
           {/* Media Gallery with Metrics */}
           <div className="bg-[#0b0b0b] border border-neutral-800 rounded-2xl p-5 space-y-3">
-            <h2 className="text-xs font-black uppercase tracking-wider text-neutral-400">
-              Your Media Gallery & Clicks Performance
-            </h2>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-wider text-white flex items-center space-x-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#e50914]" />
+                  <span>Your Media Gallery & Clicks Performance</span>
+                </h2>
+                <p className="text-[10px] text-neutral-500 mt-0.5">
+                  All campaign images and uploads stored with live tracked clicks.
+                </p>
+              </div>
+              <span className="text-[10px] text-neutral-400 font-mono bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">
+                {galleryImages.length} Assets
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-1">
               {galleryImages.map((img, idx) => (
                 <div
                   key={idx}
                   onClick={() => setSelectedImageUrl(img.url)}
                   className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
-                    selectedImageUrl === img.url ? 'border-red-600' : 'border-transparent hover:border-neutral-700'
+                    selectedImageUrl === img.url
+                      ? 'border-red-600 scale-[1.02] shadow-lg shadow-red-600/30'
+                      : 'border-transparent hover:border-neutral-700'
                   }`}
                 >
                   <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
-                  <div className="absolute top-1 right-1 bg-black/80 backdrop-blur-xs text-[8px] font-black text-emerald-400 border border-neutral-800 px-1 rounded">
+                  <div className="absolute top-1 right-1 bg-black/85 backdrop-blur-xs text-[8px] font-black text-emerald-400 border border-neutral-800 px-1.5 py-0.5 rounded shadow">
                     {img.clicks} CLKS
                   </div>
+                  {selectedImageUrl === img.url && (
+                    <div className="absolute bottom-1 left-1 bg-red-600 text-[8px] font-black text-white px-1.5 py-0.5 rounded uppercase">
+                      Active
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

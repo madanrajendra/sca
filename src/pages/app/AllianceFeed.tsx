@@ -17,11 +17,12 @@ import {
   Flame,
   ArrowUpRight,
   Plus,
-  ChevronDown
+  ChevronDown,
+  Trash2,
 } from 'lucide-react';
 
 export const AllianceFeed: React.FC = () => {
-  const { promotions, promotedOffers, businesses, promoteOffer } = useSCAData();
+  const { promotions, promotedOffers, businesses, promoteOffer, deletePromotion } = useSCAData();
   const { currentUser } = useAuth();
   
   // Share modal state
@@ -231,13 +232,30 @@ export const AllianceFeed: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => setSharingPost(post)}
-                        className="flex items-center space-x-1.5 text-red-400 hover:text-white bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 hover:border-red-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm active:scale-95"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                        <span>Share ({post.shares || 0})</span>
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setSharingPost(post)}
+                          className="flex items-center space-x-1.5 text-red-400 hover:text-white bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 hover:border-red-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all shadow-sm active:scale-95"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>Share ({post.shares || 0})</span>
+                        </button>
+
+                        {(post.businessId === myBusinessId || currentUser.role === 'ALLIANCE_ADMIN' || currentUser.role === 'NATIONAL_ADMIN') && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete post "${post.title}"?`)) {
+                                deletePromotion(post.id);
+                              }
+                            }}
+                            className="flex items-center space-x-1 text-neutral-500 hover:text-red-400 bg-neutral-900 hover:bg-red-950/40 border border-neutral-800 hover:border-red-900/50 px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase transition-all"
+                            title="Delete Post"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

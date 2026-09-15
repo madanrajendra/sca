@@ -69,6 +69,7 @@ interface SCADataContextType {
   recordPostClick: (postId: string) => Promise<void>;
   updateBusinessReach: (businessId: string, reachData: { instagramFollowers: number; facebookFollowers: number; miscellaneousFollowers: number; estimatedReach: number }) => void;
   refreshPosts: () => Promise<void>;
+  deletePromotion: (id: string) => Promise<void>;
   
   // Business Loop 3: Referrals
   sendReferral: (data: {
@@ -394,6 +395,17 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (err) {
       console.error('[SCAData] Failed to record post click in backend:', err);
     }
+  };
+
+  // Delete promotion from MongoDB and local state
+  const deletePromotion = async (id: string) => {
+    setPromotions((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('[SCAData] Failed to delete post in backend:', err);
+    }
+    logActivity('Promotion Deleted', 'AdSharePromotion', id, `Deleted promotion ${id}`);
   };
 
   // Update business social followers and estimated audience
@@ -726,6 +738,7 @@ export const SCADataProvider: React.FC<{ children: ReactNode }> = ({ children })
         recordPostClick,
         updateBusinessReach,
         refreshPosts,
+        deletePromotion,
         sendReferral,
         updateReferralStatus,
         createAlliance,

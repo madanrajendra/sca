@@ -135,6 +135,24 @@ apiRouter.post('/posts/:id/click', async (req: Request, res: Response) => {
   }
 });
 
+// DELETE /api/posts/:id - Delete a post from MongoDB sca.posts
+apiRouter.delete('/posts/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const postsCol = await getPostsCollection();
+    const clicksCol = await getClicksCollection();
+
+    const result = await postsCol.deleteOne({ id });
+    await clicksCol.deleteMany({ postId: id });
+
+    console.log(`[API] Deleted post ${id} from MongoDB sca.posts`);
+    res.json({ success: true, id, deletedCount: result.deletedCount });
+  } catch (error: any) {
+    console.error('[API] Error deleting post:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to delete post' });
+  }
+});
+
 // GET /api/settings/:businessId - Fetch business settings
 apiRouter.get('/settings/:businessId', async (req: Request, res: Response) => {
   try {

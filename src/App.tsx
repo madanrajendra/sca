@@ -73,19 +73,11 @@ export function App() {
             />
             <Route
               path="/app/adshare"
-              element={
-                <AppLayout>
-                  <AdShareMarketplace />
-                </AppLayout>
-              }
+              element={<Navigate to="/app/feed" replace />}
             />
             <Route
               path="/app/promotions/create"
-              element={
-                <AppLayout>
-                  <CreatePromotionWizard />
-                </AppLayout>
-              }
+              element={<Navigate to="/app/feed/create" replace />}
             />
             <Route
               path="/app/promotions"

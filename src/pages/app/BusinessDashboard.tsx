@@ -53,17 +53,17 @@ export const BusinessDashboard: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           <Link
-            to="/app/promotions/create"
+            to="/app/feed/create"
             className="adshare-red-btn px-5 py-3 rounded-xl text-xs font-black flex items-center space-x-2 shadow-lg shadow-red-600/30"
           >
             <Plus className="w-5 h-5" />
             <span>Create Campaign</span>
           </Link>
           <Link
-            to="/app/adshare"
+            to="/app/feed"
             className="bg-[#0b0b0b] hover:bg-neutral-900 border border-neutral-800 hover:border-red-600/50 text-white px-5 py-3 rounded-xl text-xs font-bold uppercase transition-all"
           >
-            Explore Marketplace
+            Explore Alliance Feed
           </Link>
         </div>
       </div>
@@ -112,8 +112,8 @@ export const BusinessDashboard: React.FC = () => {
             <Sparkles className="w-5 h-5 text-[#e50914]" />
             <h2 className="text-xl font-black uppercase text-white">WHAT CAN I PROMOTE? (NEW PROMOTIONS)</h2>
           </div>
-          <Link to="/app/adshare" className="text-xs font-bold uppercase text-red-500 hover:text-white flex items-center space-x-1">
-            <span>View All Marketplace Campaigns</span>
+          <Link to="/app/feed" className="text-xs font-bold uppercase text-red-500 hover:text-white flex items-center space-x-1">
+            <span>View All Alliance Posts</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -135,7 +135,7 @@ export const BusinessDashboard: React.FC = () => {
               <div className="pt-2 border-t border-neutral-900 flex items-center justify-between">
                 <div className="text-xs font-extrabold text-white uppercase">{promo.businessName}</div>
                 <Link
-                  to="/app/adshare"
+                  to="/app/feed"
                   className="adshare-red-btn px-3 py-1.5 rounded-lg text-xs font-black flex items-center space-x-1"
                 >
                   <Megaphone className="w-3 h-3" />
@@ -167,7 +167,7 @@ export const BusinessDashboard: React.FC = () => {
                 </div>
 
                 <Link
-                  to="/app/adshare"
+                  to="/app/feed"
                   className="adshare-red-btn px-4 py-2 rounded-xl text-xs font-black shrink-0 uppercase"
                 >
                   Promote Now
