@@ -19,5 +19,12 @@ export function createServerApp() {
   // Sharable link route
   app.get('/share/:id', handleShareRoute);
 
+  // Direct image route
+  app.get('/image/:id', async (req, res) => {
+    const { servePostImage } = await import('./api.js');
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    await servePostImage(id as string, res);
+  });
+
   return app;
 }

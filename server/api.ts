@@ -24,6 +24,93 @@ apiRouter.get('/posts', async (_req: Request, res: Response) => {
   }
 });
 
+// Helper to serve raw binary image with Vercel CDN Edge Cache
+export async function servePostImage(id: string, res: Response) {
+  try {
+    const postsCol = await getPostsCollection();
+    const post = await postsCol.findOne({ id });
+
+    if (!post || !post.imageUrl) {
+      // Fallback SVG image
+      const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+        <rect width="1200" height="630" fill="#0b0b0b"/>
+        <rect x="40" y="40" width="1120" height="550" rx="24" fill="#141414" stroke="#e50914" stroke-width="4"/>
+        <text x="600" y="280" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" text-anchor="middle">SPIN CITY ALLIANCE</text>
+        <text x="600" y="350" fill="#a3a3a3" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" text-anchor="middle">Exclusive Alliance Member Campaign</text>
+      </svg>`;
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+      return res.send(fallbackSvg);
+    }
+
+    const imgUrl = post.imageUrl;
+
+    // 1. If base64 data URI: data:image/...;base64,...
+    if (imgUrl.startsWith('data:image/')) {
+      const commaIndex = imgUrl.indexOf(',');
+      if (commaIndex !== -1) {
+        const meta = imgUrl.substring(5, commaIndex);
+        const mimeType = meta.split(';')[0] || 'image/png';
+        const base64Data = imgUrl.substring(commaIndex + 1);
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Length', buffer.length);
+        // Vercel Edge CDN Cache headers: cached globally on Vercel CDN for 1 year
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400');
+        return res.end(buffer);
+      }
+    }
+
+    // 2. If raw base64 string without data: prefix
+    if (!imgUrl.startsWith('http://') && !imgUrl.startsWith('https://') && imgUrl.length > 200) {
+      try {
+        const buffer = Buffer.from(imgUrl, 'base64');
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400');
+        return res.end(buffer);
+      } catch {}
+    }
+
+    // 3. If external HTTP/HTTPS URL - fetch, buffer, and serve with Vercel cache
+    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+      try {
+        const fetchRes = await fetch(imgUrl);
+        if (fetchRes.ok) {
+          const contentType = fetchRes.headers.get('content-type') || 'image/jpeg';
+          const arrayBuf = await fetchRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuf);
+
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Content-Length', buffer.length);
+          res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400');
+          return res.end(buffer);
+        }
+      } catch (err) {
+        console.warn(`[API] Proxy fetch failed for ${imgUrl}:`, err);
+      }
+      return res.redirect(302, imgUrl);
+    }
+
+    res.status(404).send('Image format not supported');
+  } catch (error: any) {
+    console.error('[API] Error serving image:', error);
+    res.status(500).send('Failed to serve image');
+  }
+}
+
+// GET /api/image/:id and /api/posts/:id/image - Cached binary image endpoint
+apiRouter.get('/image/:id', async (req: Request, res: Response) => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  await servePostImage(id as string, res);
+});
+
+apiRouter.get('/posts/:id/image', async (req: Request, res: Response) => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  await servePostImage(id as string, res);
+});
+
 // GET /api/posts/:id - Fetch single post
 apiRouter.get('/posts/:id', async (req: Request, res: Response) => {
   try {

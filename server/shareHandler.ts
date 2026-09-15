@@ -66,10 +66,12 @@ export async function handleShareRoute(req: Request, res: Response) {
     await clicksCol.insertOne(clickLog);
     console.log(`[Share] Link opened for "${post.title}" (${id}). Registered click #${totalClicks}`);
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:5173';
-    const fullUrl = `${protocol}://${host}/share/${id}`;
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers['x-forwarded-host'] || req.get('host') || 'sca-usa.vercel.app';
+    const origin = `${protocol}://${host}`;
+    const fullUrl = `${origin}/share/${id}`;
     const destinationUrl = post.destinationUrl || '/';
+    const publicImageUrl = `${origin}/api/image/${post.id}`;
 
     const safeTitle = escapeHtml(post.title);
     const safeDesc = escapeHtml(post.shortDescription || post.description || post.offer || 'Exclusive promotion on Spin City Alliance');
@@ -86,11 +88,15 @@ export async function handleShareRoute(req: Request, res: Response) {
   <title>${safeTitle} | ${safeBizName} on Spin City Alliance</title>
 
   <!-- Open Graph / URL Context Preview Meta Tags -->
-  <meta property="og:type" content="article">
+  <meta property="og:type" content="website">
   <meta property="og:site_name" content="Spin City Alliance">
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
-  <meta property="og:image" content="${post.imageUrl}">
+  <meta property="og:image" content="${publicImageUrl}">
+  <meta property="og:image:secure_url" content="${publicImageUrl}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${safeTitle}">
   <meta property="og:url" content="${fullUrl}">
 
@@ -99,7 +105,7 @@ export async function handleShareRoute(req: Request, res: Response) {
   <meta name="twitter:site" content="@SpinCityAlliance">
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeDesc}">
-  <meta name="twitter:image" content="${post.imageUrl}">
+  <meta name="twitter:image" content="${publicImageUrl}">
 
   <style>
     :root {
@@ -353,7 +359,7 @@ export async function handleShareRoute(req: Request, res: Response) {
 
   <div class="main-card">
     <div class="image-container">
-      <img src="${post.imageUrl}" alt="${safeTitle}" class="banner-img">
+      <img src="${publicImageUrl}" alt="${safeTitle}" class="banner-img" loading="eager">
     </div>
 
     <div class="content-area">

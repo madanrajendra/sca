@@ -9,6 +9,10 @@
       "destination": "/api"
     },
     {
+      "source": "/image/(.*)",
+      "destination": "/api"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
